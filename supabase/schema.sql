@@ -1,0 +1,1 @@
+Error: Failed to run sql query: ERROR: 42703: column "user_id" does not exist

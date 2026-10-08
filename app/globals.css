@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist), var(--font-thai), system-ui, sans-serif;
+}
+
+/* The UI is designed light-only for now; keep native controls light too */
+:root {
+  color-scheme: light;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

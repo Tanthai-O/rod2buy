@@ -1,0 +1,161 @@
+export const CAR_BRANDS = [
+  "Toyota",
+  "Honda",
+  "Isuzu",
+  "Ford",
+  "Mazda",
+  "Mitsubishi",
+  "Nissan",
+  "Chevrolet",
+  "Suzuki",
+  "Subaru",
+  "BMW",
+  "Mercedes-Benz",
+  "Audi",
+  "MG",
+  "BYD",
+  "Tesla",
+  "Volvo",
+  "Kia",
+  "Hyundai",
+]
+
+export const PROVINCES = [
+  "กรุงเทพมหานคร",
+  "กระบี่",
+  "กาญจนบุรี",
+  "กาฬสินธุ์",
+  "กำแพงเพชร",
+  "ขอนแก่น",
+  "จันทบุรี",
+  "ฉะเชิงเทรา",
+  "ชลบุรี",
+  "ชัยนาท",
+  "ชัยภูมิ",
+  "ชุมพร",
+  "เชียงราย",
+  "เชียงใหม่",
+  "ตรัง",
+  "ตราด",
+  "ตาก",
+  "นครนายก",
+  "นครปฐม",
+  "นครพนม",
+  "นครราชสีมา",
+  "นครศรีธรรมราช",
+  "นครสวรรค์",
+  "นนทบุรี",
+  "นราธิวาส",
+  "น่าน",
+  "บึงกาฬ",
+  "บุรีรัมย์",
+  "ปทุมธานี",
+  "ประจวบคีรีขันธ์",
+  "ปราจีนบุรี",
+  "ปัตตานี",
+  "พระนครศรีอยุธยา",
+  "พะเยา",
+  "พังงา",
+  "พัทลุง",
+  "พิจิตร",
+  "พิษณุโลก",
+  "เพชรบุรี",
+  "เพชรบูรณ์",
+  "แพร่",
+  "ภูเก็ต",
+  "มหาสารคาม",
+  "มุกดาหาร",
+  "แม่ฮ่องสอน",
+  "ยโสธร",
+  "ยะลา",
+  "ร้อยเอ็ด",
+  "ระนอง",
+  "ระยอง",
+  "ราชบุรี",
+  "ลพบุรี",
+  "ลำปาง",
+  "ลำพูน",
+  "เลย",
+  "ศรีสะเกษ",
+  "สกลนคร",
+  "สงขลา",
+  "สตูล",
+  "สมุทรปราการ",
+  "สมุทรสงคราม",
+  "สมุทรสาคร",
+  "สระแก้ว",
+  "สระบุรี",
+  "สิงห์บุรี",
+  "สุโขทัย",
+  "สุพรรณบุรี",
+  "สุราษฎร์ธานี",
+  "สุรินทร์",
+  "หนองคาย",
+  "หนองบัวลำภู",
+  "อ่างทอง",
+  "อำนาจเจริญ",
+  "อุดรธานี",
+  "อุตรดิตถ์",
+  "อุทัยธานี",
+  "อุบลราชธานี",
+]
+
+export const FUEL_TYPES = [
+  { value: "petrol", label: "เบนซิน" },
+  { value: "diesel", label: "ดีเซล" },
+  { value: "hybrid", label: "ไฮบริด" },
+  { value: "electric", label: "ไฟฟ้า" },
+  { value: "ngv", label: "NGV" },
+]
+
+export const FUEL_LABELS: Record<string, string> = {
+  petrol: "เบนซิน",
+  diesel: "ดีเซล",
+  hybrid: "ไฮบริด",
+  electric: "ไฟฟ้า",
+  ngv: "NGV",
+}
+
+export const TRANSMISSION_LABELS: Record<string, string> = {
+  auto: "อัตโนมัติ",
+  manual: "ธรรมดา",
+}
+
+const THIS_YEAR = new Date().getFullYear()
+export const YEAR_OPTIONS = Array.from({ length: 16 }, (_, i) => THIS_YEAR - i)
+
+export const SORT_OPTIONS = [
+  { value: "", label: "ใหม่ล่าสุด" },
+  { value: "price_asc", label: "ราคาต่ำ → สูง" },
+  { value: "price_desc", label: "ราคาสูง → ต่ำ" },
+  { value: "mileage_asc", label: "ไมล์น้อยสุด" },
+  { value: "year_desc", label: "ปีใหม่สุด" },
+]
+
+export const PAGE_SIZE = 24
+
+export const REPORT_REASONS = [
+  { value: "scam", label: "น่าจะเป็นมิจฉาชีพ / หลอกโอนเงิน" },
+  { value: "wrong_info", label: "ข้อมูลรถไม่ตรงความจริง" },
+  { value: "sold", label: "รถขายไปแล้ว แต่ยังลงประกาศ" },
+  { value: "duplicate", label: "ประกาศซ้ำ" },
+  { value: "other", label: "อื่น ๆ" },
+]
+
+export const REPORT_REASON_LABELS: Record<string, string> = Object.fromEntries(
+  REPORT_REASONS.map((r) => [r.value, r.label])
+)
+
+export const CAR_EVENT_TYPES = ["ซ่อม", "เปลี่ยนอะไหล่", "ตรวจสภาพ", "อุบัติเหตุ", "อื่น ๆ"]
+
+export const PRICE_OPTIONS = [
+  { value: "100000", label: "100,000" },
+  { value: "200000", label: "200,000" },
+  { value: "300000", label: "300,000" },
+  { value: "500000", label: "500,000" },
+  { value: "800000", label: "800,000" },
+  { value: "1000000", label: "1,000,000" },
+  { value: "1500000", label: "1,500,000" },
+  { value: "2000000", label: "2,000,000" },
+  { value: "3000000", label: "3,000,000" },
+]
