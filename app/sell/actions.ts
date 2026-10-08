@@ -17,6 +17,14 @@ export interface CreateListingPayload {
   price: number
   province: string
   description?: string
+  variant?: string
+  body_type: string
+  cab_type?: string
+  engine_cc?: number
+  drivetrain?: string
+  seats?: number
+  seller_type: string
+  district?: string
   num_owners: number
   finance_status: string
   accident_history: string
@@ -46,6 +54,14 @@ function parsePayload(payload: CreateListingPayload) {
     price: Number(payload.price),
     province: payload.province,
     description: payload.description,
+    variant: payload.variant,
+    body_type: payload.body_type,
+    cab_type: payload.cab_type || undefined,
+    engine_cc: payload.engine_cc ? Number(payload.engine_cc) : undefined,
+    drivetrain: payload.drivetrain || undefined,
+    seats: payload.seats ? Number(payload.seats) : undefined,
+    seller_type: payload.seller_type,
+    district: payload.district,
     num_owners: Number(payload.num_owners),
     finance_status: payload.finance_status,
     accident_history: payload.accident_history,
@@ -58,7 +74,7 @@ function parsePayload(payload: CreateListingPayload) {
 
 function toRow(d: NonNullable<ReturnType<typeof parsePayload>["data"]>) {
   return {
-    title: `${d.brand} ${d.model} ${d.year}`,
+    title: [d.brand, d.model, d.variant?.trim(), d.year].filter(Boolean).join(" "),
     brand: d.brand,
     model: d.model,
     year: d.year,
@@ -69,6 +85,14 @@ function toRow(d: NonNullable<ReturnType<typeof parsePayload>["data"]>) {
     price: d.price,
     province: d.province,
     description: d.description?.trim() || null,
+    variant: d.variant?.trim() || null,
+    body_type: d.body_type,
+    cab_type: d.body_type === "pickup" ? d.cab_type ?? null : null,
+    engine_cc: d.engine_cc ?? null,
+    drivetrain: d.drivetrain ?? null,
+    seats: d.seats ?? null,
+    seller_type: d.seller_type,
+    district: d.district?.trim() || null,
     num_owners: d.num_owners,
     finance_status: d.finance_status,
     accident_history: d.accident_history,

@@ -3,7 +3,7 @@ import Image from "next/image"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
 import type { Listing } from "@/types/listing"
-import { FUEL_LABELS, TRANSMISSION_LABELS } from "@/lib/constants"
+import { FUEL_LABELS, TRANSMISSION_LABELS, BODY_TYPE_LABELS, CAB_TYPE_LABELS, DRIVETRAIN_LABELS, SELLER_TYPE_LABELS } from "@/lib/constants"
 import CompareRemoveButton from "./_components/CompareRemoveButton"
 
 export const metadata: Metadata = {
@@ -60,10 +60,22 @@ export default async function ComparePage({ searchParams }: PageProps) {
 
   const rows: { label: string; render: (l: Listing) => React.ReactNode; best?: (l: Listing) => boolean }[] = [
     { label: "ราคา", render: (l) => `฿${fmt(l.price)}`, best: (l) => l.price === minPrice },
+    { label: "รุ่นย่อย", render: (l) => l.variant ?? "–" },
     { label: "ปี", render: (l) => l.year, best: (l) => l.year === maxYear },
+    {
+      label: "ประเภทรถ",
+      render: (l) =>
+        l.body_type
+          ? [BODY_TYPE_LABELS[l.body_type], l.cab_type && CAB_TYPE_LABELS[l.cab_type]].filter(Boolean).join(" · ")
+          : "–",
+    },
     { label: "เลขไมล์", render: (l) => `${fmt(l.mileage)} กม.`, best: (l) => l.mileage === minMileage },
     { label: "เชื้อเพลิง", render: (l) => FUEL_LABELS[l.fuel_type] ?? l.fuel_type },
     { label: "เกียร์", render: (l) => TRANSMISSION_LABELS[l.transmission] ?? l.transmission },
+    { label: "เครื่องยนต์", render: (l) => (l.engine_cc ? `${fmt(l.engine_cc)} cc` : "–") },
+    { label: "ขับเคลื่อน", render: (l) => (l.drivetrain ? DRIVETRAIN_LABELS[l.drivetrain] : "–") },
+    { label: "ที่นั่ง", render: (l) => (l.seats ? `${l.seats} ที่นั่ง` : "–") },
+    { label: "ผู้ขาย", render: (l) => SELLER_TYPE_LABELS[l.seller_type ?? "private"] },
     { label: "สี", render: (l) => l.color ?? "–" },
     { label: "จังหวัด", render: (l) => l.province },
     { label: "จำนวนเจ้าของ", render: (l) => (l.num_owners ? `${l.num_owners} คน` : "–") },

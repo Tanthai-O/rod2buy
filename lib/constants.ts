@@ -121,6 +121,73 @@ export const TRANSMISSION_LABELS: Record<string, string> = {
   manual: "ธรรมดา",
 }
 
+export const BODY_TYPES = [
+  { value: "sedan", label: "เก๋ง" },
+  { value: "hatchback", label: "แฮทช์แบ็ก (5 ประตู)" },
+  { value: "pickup", label: "กระบะ" },
+  { value: "suv", label: "SUV / ครอสโอเวอร์" },
+  { value: "ppv", label: "PPV (ฟอร์จูนเนอร์, MU-X)" },
+  { value: "mpv", label: "MPV / รถครอบครัว" },
+  { value: "van", label: "รถตู้" },
+  { value: "coupe", label: "คูเป้" },
+  { value: "convertible", label: "เปิดประทุน" },
+  { value: "wagon", label: "วากอน" },
+] as const
+
+export const BODY_TYPE_LABELS: Record<string, string> = {
+  ...Object.fromEntries(BODY_TYPES.map((b) => [b.value, b.label])),
+  hatchback: "แฮทช์แบ็ก",
+  ppv: "PPV",
+  suv: "SUV",
+}
+
+export const CAB_TYPES = [
+  { value: "single", label: "ตอนเดียว" },
+  { value: "extended", label: "แคป" },
+  { value: "double", label: "4 ประตู" },
+] as const
+
+export const CAB_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  CAB_TYPES.map((c) => [c.value, c.label])
+)
+
+export const DRIVETRAINS = [
+  { value: "2wd", label: "2WD (ขับ 2 ล้อ)" },
+  { value: "4wd", label: "4WD (ขับ 4 ล้อ)" },
+  { value: "awd", label: "AWD (4 ล้อตลอดเวลา)" },
+] as const
+
+export const DRIVETRAIN_LABELS: Record<string, string> = {
+  "2wd": "2WD",
+  "4wd": "4WD",
+  awd: "AWD",
+}
+
+export const SELLER_TYPE_LABELS: Record<string, string> = {
+  private: "รถบ้าน (เจ้าของขายเอง)",
+  dealer: "เต็นท์ / ดีลเลอร์",
+}
+
+export const SEAT_OPTIONS = [2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+
+// Filter buckets (value = max cc)
+export const ENGINE_CC_OPTIONS = [
+  { min: "", max: "1300", label: "ไม่เกิน 1.3L" },
+  { min: "1301", max: "1600", label: "1.3 – 1.6L" },
+  { min: "1601", max: "2000", label: "1.6 – 2.0L" },
+  { min: "2001", max: "3000", label: "2.0 – 3.0L" },
+  { min: "3001", max: "", label: "มากกว่า 3.0L" },
+]
+
+// Trust filters — rod2buy collects these but competitors don't let you filter by them
+export const TRUST_FILTERS = [
+  { key: "one_owner", label: "มือเดียว" },
+  { key: "no_accident", label: "ไม่เคยชน" },
+  { key: "no_flood", label: "ไม่เคยจมน้ำ" },
+  { key: "clear_finance", label: "ปลอดภาระ" },
+  { key: "has_reg_book", label: "มีเล่มทะเบียน" },
+] as const
+
 const THIS_YEAR = new Date().getFullYear()
 export const YEAR_OPTIONS = Array.from({ length: 16 }, (_, i) => THIS_YEAR - i)
 

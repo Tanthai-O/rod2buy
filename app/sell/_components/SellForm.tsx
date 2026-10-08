@@ -12,6 +12,11 @@ import {
   PROVINCES,
   FUEL_TYPES,
   TRANSMISSION_LABELS,
+  BODY_TYPES,
+  CAB_TYPES,
+  DRIVETRAINS,
+  SEAT_OPTIONS,
+  SELLER_TYPE_LABELS,
 } from "@/lib/constants"
 import ImageUploader from "./ImageUploader"
 import PriceEstimate from "./PriceEstimate"
@@ -30,6 +35,15 @@ interface FormState {
   negotiable: boolean
   province: string
   description: string
+  // structured specs
+  variant: string
+  body_type: string
+  cab_type: string
+  engine_cc: string
+  drivetrain: string
+  seats: string
+  seller_type: "private" | "dealer"
+  district: string
   // document & history
   num_owners: string
   finance_status: "clear" | "financing" | "paid_off"
@@ -44,6 +58,8 @@ const EMPTY: FormState = {
   brand: "", model: "", year: "", color: "", mileage: "",
   fuel_type: "", transmission: "auto", price: "",
   negotiable: false, province: "", description: "",
+  variant: "", body_type: "", cab_type: "", engine_cc: "", drivetrain: "", seats: "",
+  seller_type: "private", district: "",
   num_owners: "1", finance_status: "clear", accident_history: "none",
   flood_damage: false, chassis_number: "", registration_province: "", tax_expiry: "",
 }
@@ -65,6 +81,14 @@ function fromListing(l: Listing, priv: ListingPrivate | null): FormState {
     negotiable,
     province: l.province,
     description: desc.replace(NEGOTIABLE_NOTE, "").trim(),
+    variant: l.variant ?? "",
+    body_type: l.body_type ?? "",
+    cab_type: l.cab_type ?? "",
+    engine_cc: l.engine_cc ? String(l.engine_cc) : "",
+    drivetrain: l.drivetrain ?? "",
+    seats: l.seats ? String(l.seats) : "",
+    seller_type: l.seller_type ?? "private",
+    district: l.district ?? "",
     num_owners: String(l.num_owners ?? 1),
     finance_status: l.finance_status ?? "clear",
     accident_history: l.accident_history ?? "none",
@@ -138,6 +162,18 @@ export default function SellForm({
     setRegBookPreview(url)
   }
 
+  // Shared by validation + payload; empty inputs → undefined
+  const specFields = () => ({
+    variant: form.variant.trim() || undefined,
+    body_type: form.body_type as "sedan",
+    cab_type: form.body_type === "pickup" && form.cab_type ? (form.cab_type as "single") : undefined,
+    engine_cc: form.fuel_type !== "electric" && form.engine_cc ? Number(form.engine_cc) : undefined,
+    drivetrain: (form.drivetrain || undefined) as "2wd" | undefined,
+    seats: form.seats ? Number(form.seats) : undefined,
+    seller_type: form.seller_type,
+    district: form.district.trim() || undefined,
+  })
+
   // ── Client-side Zod validation ──────────────────────
   const validate = (): string | null => {
     const result = listingSchema.safeParse({
@@ -151,6 +187,7 @@ export default function SellForm({
       price: Number(form.price) || 0,
       province: form.province,
       description: form.description,
+      ...specFields(),
       num_owners: Number(form.num_owners) || 1,
       finance_status: form.finance_status,
       accident_history: form.accident_history,
@@ -209,6 +246,7 @@ export default function SellForm({
         price: Number(form.price),
         province: form.province,
         description: description || undefined,
+        ...specFields(),
         num_owners: Number(form.num_owners) || 1,
         finance_status: form.finance_status,
         accident_history: form.accident_history,
@@ -361,6 +399,36 @@ export default function SellForm({
               placeholder="เช่น Camry, Civic, D-Max" className={inputCls} />
           </div>
           <div>
+            <Label>รุ่นย่อย</Label>
+            <input type="text" value={form.variant} onChange={(e) => set("variant", e.target.value)}
+              placeholder="เช่น Hi-Lander Z, Legender, RS" maxLength={100} className={inputCls} />
+          </div>
+          <div>
+            <Label required>ประเภทรถ</Label>
+            <select value={form.body_type} onChange={(e) => set("body_type", e.target.value)} className={selectCls}>
+              <option value="">เลือกประเภท</option>
+              {BODY_TYPES.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
+            </select>
+          </div>
+          {form.body_type === "pickup" && (
+            <div className="sm:col-span-2">
+              <Label>ประเภทแคป</Label>
+              <div className="flex gap-2">
+                {CAB_TYPES.map((c) => (
+                  <button key={c.value} type="button"
+                    onClick={() => set("cab_type", form.cab_type === c.value ? "" : c.value)}
+                    className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                      form.cab_type === c.value
+                        ? "bg-amber-500 border-amber-500 text-zinc-900"
+                        : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+                    }`}>
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
             <Label required>ปี</Label>
             <select value={form.year} onChange={(e) => set("year", e.target.value)} className={selectCls}>
               <option value="">เลือกปี</option>
@@ -406,6 +474,27 @@ export default function SellForm({
             <input type="number" value={form.mileage} onChange={(e) => set("mileage", e.target.value)}
               min={0} placeholder="0" className={inputCls} />
           </div>
+          {form.fuel_type !== "electric" && (
+            <div>
+              <Label>ขนาดเครื่องยนต์ (cc)</Label>
+              <input type="number" value={form.engine_cc} onChange={(e) => set("engine_cc", e.target.value)}
+                min={50} max={10000} placeholder="เช่น 1500, 2400" className={inputCls} />
+            </div>
+          )}
+          <div>
+            <Label>ระบบขับเคลื่อน</Label>
+            <select value={form.drivetrain} onChange={(e) => set("drivetrain", e.target.value)} className={selectCls}>
+              <option value="">ไม่ระบุ</option>
+              {DRIVETRAINS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <Label>จำนวนที่นั่ง</Label>
+            <select value={form.seats} onChange={(e) => set("seats", e.target.value)} className={selectCls}>
+              <option value="">ไม่ระบุ</option>
+              {SEAT_OPTIONS.map((n) => <option key={n} value={n}>{n} ที่นั่ง</option>)}
+            </select>
+          </div>
         </div>
       </section>
 
@@ -433,6 +522,26 @@ export default function SellForm({
               <option value="">เลือกจังหวัด</option>
               {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
+          </div>
+          <div>
+            <Label>อำเภอ / เขต</Label>
+            <input type="text" value={form.district} onChange={(e) => set("district", e.target.value)}
+              placeholder="เช่น เมืองขอนแก่น, บางนา" maxLength={100} className={inputCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <Label>ผู้ขาย</Label>
+            <div className="flex gap-2">
+              {(["private", "dealer"] as const).map((t) => (
+                <button key={t} type="button" onClick={() => set("seller_type", t)}
+                  className={`flex-1 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                    form.seller_type === t
+                      ? "bg-amber-500 border-amber-500 text-zinc-900"
+                      : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+                  }`}>
+                  {SELLER_TYPE_LABELS[t]}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>

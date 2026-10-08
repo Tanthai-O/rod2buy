@@ -4,7 +4,7 @@ import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
 import { Listing } from "@/types/listing"
 import { CarEvent } from "@/types/car-event"
-import { FUEL_LABELS, TRANSMISSION_LABELS } from "@/lib/constants"
+import { FUEL_LABELS, TRANSMISSION_LABELS, BODY_TYPE_LABELS, CAB_TYPE_LABELS, DRIVETRAIN_LABELS, SELLER_TYPE_LABELS } from "@/lib/constants"
 import ImageGallery from "./_components/ImageGallery"
 import CarHistoryTimeline from "./_components/CarHistoryTimeline"
 import SaveButton from "./_components/SaveButton"
@@ -190,12 +190,20 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const specRows = [
     ["ยี่ห้อ", listing.brand],
     ["รุ่น", listing.model],
+    ...(listing.variant ? [["รุ่นย่อย", listing.variant]] : []),
     ["ปี", String(listing.year)],
+    ...(listing.body_type
+      ? [["ประเภทรถ", [BODY_TYPE_LABELS[listing.body_type], listing.cab_type && CAB_TYPE_LABELS[listing.cab_type]].filter(Boolean).join(" · ")]]
+      : []),
     ["เลขไมล์", `${fmt(listing.mileage)} กม.`],
     ["เชื้อเพลิง", FUEL_LABELS[listing.fuel_type] ?? listing.fuel_type],
     ["เกียร์", TRANSMISSION_LABELS[listing.transmission] ?? listing.transmission],
+    ...(listing.engine_cc ? [["เครื่องยนต์", `${fmt(listing.engine_cc)} cc`]] : []),
+    ...(listing.drivetrain ? [["ระบบขับเคลื่อน", DRIVETRAIN_LABELS[listing.drivetrain]]] : []),
+    ...(listing.seats ? [["จำนวนที่นั่ง", `${listing.seats} ที่นั่ง`]] : []),
     ["สี", listing.color ?? "ไม่ระบุ"],
-    ["จังหวัด", listing.province],
+    ["จังหวัด", listing.district ? `${listing.district}, ${listing.province}` : listing.province],
+    ["ผู้ขาย", SELLER_TYPE_LABELS[listing.seller_type ?? "private"]],
   ]
 
   return (

@@ -9,7 +9,15 @@ import {
   PRICE_OPTIONS,
   YEAR_OPTIONS,
   SORT_OPTIONS,
+  BODY_TYPES,
+  CAB_TYPES,
+  DRIVETRAINS,
+  ENGINE_CC_OPTIONS,
+  TRUST_FILTERS,
 } from "@/lib/constants"
+
+// Filters inside the collapsible "more" panel
+const ADVANCED_KEYS = ["cab_type", "drivetrain", "cc", "seats_min", "year_max", "seller_type"]
 
 export default function FilterBar() {
   const router = useRouter()
@@ -20,6 +28,8 @@ export default function FilterBar() {
       const p = new URLSearchParams(searchParams.toString())
       if (value) p.set(key, value)
       else p.delete(key)
+      // Cab type only means something for pickups
+      if (key === "body_type" && value !== "pickup") p.delete("cab_type")
       // เปลี่ยน filter แล้วกลับไปหน้าแรกเสมอ
       p.delete("page")
       router.push(`/listings?${p.toString()}`)
@@ -28,6 +38,10 @@ export default function FilterBar() {
   )
 
   const [q, setQ] = useState(searchParams.get("q") ?? "")
+  const [showMore, setShowMore] = useState(() =>
+    ADVANCED_KEYS.some((k) => searchParams.has(k))
+  )
+  const toggle = (key: string) => update(key, searchParams.get(key) === "1" ? "" : "1")
 
   const clearAll = () => {
     setQ("")
@@ -82,6 +96,21 @@ export default function FilterBar() {
           {CAR_BRANDS.map((b) => (
             <option key={b} value={b}>
               {b}
+            </option>
+          ))}
+        </select>
+
+        {/* Body type */}
+        <select
+          value={searchParams.get("body_type") ?? ""}
+          onChange={(e) => update("body_type", e.target.value)}
+          className={selectClass}
+          aria-label="ประเภทรถ"
+        >
+          <option value="">ทุกประเภท</option>
+          {BODY_TYPES.map((b) => (
+            <option key={b.value} value={b.value}>
+              {b.label}
             </option>
           ))}
         </select>
@@ -212,6 +241,130 @@ export default function FilterBar() {
           ))}
         </select>
       </div>
+
+      {/* Trust chips — rod2buy's edge over other marketplaces */}
+      <div className="flex flex-wrap gap-2 items-center">
+        {TRUST_FILTERS.map((f) => {
+          const on = searchParams.get(f.key) === "1"
+          return (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => toggle(f.key)}
+              aria-pressed={on}
+              className={`text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                on
+                  ? "bg-amber-500 border-amber-500 text-zinc-900 font-medium"
+                  : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50"
+              }`}
+            >
+              {on && "✓ "}
+              {f.label}
+            </button>
+          )
+        })}
+        <button
+          type="button"
+          onClick={() => setShowMore((v) => !v)}
+          aria-expanded={showMore}
+          className="text-sm text-zinc-500 hover:text-zinc-800 font-medium px-2 py-1.5 sm:ml-auto"
+        >
+          {showMore ? "ซ่อนตัวกรองเพิ่มเติม ▴" : "ตัวกรองเพิ่มเติม ▾"}
+        </button>
+      </div>
+
+      {showMore && (
+        <div className="flex flex-wrap gap-2 items-center pt-3 border-t border-zinc-100">
+          {/* Seller type */}
+          <select
+            value={searchParams.get("seller_type") ?? ""}
+            onChange={(e) => update("seller_type", e.target.value)}
+            className={selectClass}
+            aria-label="ประเภทผู้ขาย"
+          >
+            <option value="">รถบ้าน + เต็นท์</option>
+            <option value="private">เฉพาะรถบ้าน</option>
+            <option value="dealer">เฉพาะเต็นท์</option>
+          </select>
+
+          {/* Cab type — pickups only */}
+          {searchParams.get("body_type") === "pickup" && (
+            <select
+              value={searchParams.get("cab_type") ?? ""}
+              onChange={(e) => update("cab_type", e.target.value)}
+              className={selectClass}
+              aria-label="ประเภทแคป"
+            >
+              <option value="">ทุกแคป</option>
+              {CAB_TYPES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Drivetrain */}
+          <select
+            value={searchParams.get("drivetrain") ?? ""}
+            onChange={(e) => update("drivetrain", e.target.value)}
+            className={selectClass}
+            aria-label="ระบบขับเคลื่อน"
+          >
+            <option value="">ทุกระบบขับเคลื่อน</option>
+            {DRIVETRAINS.map((d) => (
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Engine size */}
+          <select
+            value={searchParams.get("cc") ?? ""}
+            onChange={(e) => update("cc", e.target.value)}
+            className={selectClass}
+            aria-label="ขนาดเครื่องยนต์"
+          >
+            <option value="">ทุกขนาดเครื่อง</option>
+            {ENGINE_CC_OPTIONS.map((o) => (
+              <option key={o.label} value={`${o.min}-${o.max}`}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+
+          {/* Seats */}
+          <select
+            value={searchParams.get("seats_min") ?? ""}
+            onChange={(e) => update("seats_min", e.target.value)}
+            className={selectClass}
+            aria-label="จำนวนที่นั่ง"
+          >
+            <option value="">ทุกจำนวนที่นั่ง</option>
+            {[5, 7, 10].map((n) => (
+              <option key={n} value={n}>
+                {n} ที่นั่งขึ้นไป
+              </option>
+            ))}
+          </select>
+
+          {/* Year max */}
+          <select
+            value={searchParams.get("year_max") ?? ""}
+            onChange={(e) => update("year_max", e.target.value)}
+            className={selectClass}
+            aria-label="ปีไม่เกิน"
+          >
+            <option value="">ปีไม่เกิน…</option>
+            {YEAR_OPTIONS.map((y) => (
+              <option key={y} value={y}>
+                ไม่เกินปี {y}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   )
 }

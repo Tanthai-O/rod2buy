@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Listing } from "@/types/listing"
-import { FUEL_LABELS } from "@/lib/constants"
+import { FUEL_LABELS, BODY_TYPE_LABELS } from "@/lib/constants"
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("th-TH").format(price)
@@ -61,7 +61,10 @@ export default function ListingCard({ listing }: { listing: Listing }) {
             <p className="font-semibold text-zinc-900 truncate leading-tight">
               {listing.brand} {listing.model}
             </p>
-            <p className="text-sm text-zinc-500 mt-0.5">{listing.year}</p>
+            <p className="text-sm text-zinc-500 mt-0.5 truncate">
+              {listing.year}
+              {listing.variant && ` · ${listing.variant}`}
+            </p>
           </div>
           <p className="text-lg font-bold text-amber-500 whitespace-nowrap shrink-0">
             ฿{formatPrice(listing.price)}
@@ -75,6 +78,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <span className="inline-flex text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full">
             {FUEL_LABELS[listing.fuel_type] ?? listing.fuel_type}
           </span>
+          {listing.body_type && (
+            <span className="inline-flex text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full">
+              {BODY_TYPE_LABELS[listing.body_type]}
+            </span>
+          )}
           {listing.mileage > 0 && (
             <span className="text-xs text-zinc-400">{formatMileage(listing.mileage)} กม.</span>
           )}

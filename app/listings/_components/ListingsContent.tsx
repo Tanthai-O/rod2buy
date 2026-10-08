@@ -8,6 +8,18 @@ interface Props {
   searchParams: Promise<Record<string, string>>
 }
 
+const BODY_TYPE_VALUES = new Set(["sedan", "hatchback", "pickup", "suv", "ppv", "mpv", "van", "coupe", "convertible", "wagon"])
+const CAB_TYPE_VALUES = new Set(["single", "extended", "double"])
+const DRIVETRAIN_VALUES = new Set(["2wd", "4wd", "awd"])
+const SELLER_TYPE_VALUES = new Set(["private", "dealer"])
+
+// "1301-1600" → [1301, 1600]; either side may be empty
+function parseRange(v: string | undefined): [number | null, number | null] {
+  const [a, b] = (v ?? "").split("-")
+  const n = (s?: string) => (s && /^\d+$/.test(s) ? Number(s) : null)
+  return [n(a), n(b)]
+}
+
 const SORTS: Record<string, { column: string; ascending: boolean }> = {
   price_asc: { column: "price", ascending: true },
   price_desc: { column: "price", ascending: false },
@@ -36,13 +48,31 @@ export default async function ListingsContent({ searchParams }: Props) {
   if (params.price_min) query = query.gte("price", Number(params.price_min))
   if (params.price_max) query = query.lte("price", Number(params.price_max))
   if (params.mileage_max) query = query.lte("mileage", Number(params.mileage_max))
+  if (Number(params.year_max)) query = query.lte("year", Number(params.year_max))
+
+  // Structured specs (migration 005)
+  if (BODY_TYPE_VALUES.has(params.body_type)) query = query.eq("body_type", params.body_type)
+  if (params.body_type === "pickup" && CAB_TYPE_VALUES.has(params.cab_type)) query = query.eq("cab_type", params.cab_type)
+  if (DRIVETRAIN_VALUES.has(params.drivetrain)) query = query.eq("drivetrain", params.drivetrain)
+  if (SELLER_TYPE_VALUES.has(params.seller_type)) query = query.eq("seller_type", params.seller_type)
+  if (Number(params.seats_min)) query = query.gte("seats", Number(params.seats_min))
+  const [ccMin, ccMax] = parseRange(params.cc)
+  if (ccMin !== null) query = query.gte("engine_cc", ccMin)
+  if (ccMax !== null) query = query.lte("engine_cc", ccMax)
+
+  // Trust filters — values rod2buy collects that other sites don't let you filter by
+  if (params.one_owner === "1") query = query.eq("num_owners", 1)
+  if (params.no_accident === "1") query = query.eq("accident_history", "none")
+  if (params.no_flood === "1") query = query.eq("flood_damage", false)
+  if (params.clear_finance === "1") query = query.in("finance_status", ["clear", "paid_off"])
+  if (params.has_reg_book === "1") query = query.eq("has_registration_book", true)
 
   // Keyword search — strip characters that have meaning in PostgREST filter syntax
   const q = (params.q ?? "").replace(/[,()*%:\\"'.]/g, " ").trim().slice(0, 50)
   if (q) {
     const words = q.split(/\s+/).slice(0, 4)
     for (const w of words) {
-      query = query.or(`title.ilike.*${w}*,brand.ilike.*${w}*,model.ilike.*${w}*,description.ilike.*${w}*`)
+      query = query.or(`title.ilike.*${w}*,brand.ilike.*${w}*,model.ilike.*${w}*,variant.ilike.*${w}*,description.ilike.*${w}*`)
     }
   }
 

@@ -1,3 +1,7 @@
+export type BodyType =
+  | "sedan" | "hatchback" | "pickup" | "suv" | "ppv"
+  | "mpv" | "van" | "coupe" | "convertible" | "wagon"
+
 export interface Listing {
   id: string
   title: string
@@ -13,6 +17,14 @@ export interface Listing {
   transmission: "auto" | "manual"
   color?: string
   description?: string
+  variant?: string | null
+  body_type?: BodyType | null
+  cab_type?: "single" | "extended" | "double" | null
+  engine_cc?: number | null
+  drivetrain?: "2wd" | "4wd" | "awd" | null
+  seats?: number | null
+  seller_type?: "private" | "dealer"
+  district?: string | null
   user_id: string
   created_at: string
   updated_at?: string
