@@ -179,6 +179,42 @@ export const ENGINE_CC_OPTIONS = [
   { min: "3001", max: "", label: "มากกว่า 3.0L" },
 ]
 
+export const MODIFICATION_LEVELS = [
+  { value: "stock", label: "เดิมๆ ทั้งคัน", hint: "ไม่ได้แต่งอะไรเลย" },
+  { value: "light", label: "แต่งเล็กน้อย", hint: "ล้อ ฟิล์ม เครื่องเสียง ไฟ" },
+  { value: "moderate", label: "แต่งปานกลาง", hint: "ช่วงล่าง ท่อ เบรก ชุดแต่งรอบคัน" },
+  { value: "heavy", label: "แต่งจัดเต็ม / จูน", hint: "จูน ECU เทอร์โบ วางเครื่อง โมดิฟายเครื่อง" },
+] as const
+
+export const MODIFICATION_LEVEL_LABELS: Record<string, string> = Object.fromEntries(
+  MODIFICATION_LEVELS.map((m) => [m.value, m.label])
+)
+
+export const MODIFICATION_CATEGORIES = [
+  { value: "engine", label: "เครื่องยนต์ / ECU" },
+  { value: "forced_induction", label: "เทอร์โบ / ซุปเปอร์ชาร์จ" },
+  { value: "exhaust", label: "ท่อไอเสีย" },
+  { value: "suspension", label: "ช่วงล่าง" },
+  { value: "wheels", label: "ล้อ / ยาง" },
+  { value: "brakes", label: "เบรก" },
+  { value: "body", label: "ชุดแต่งตัวถัง / สี" },
+  { value: "interior", label: "ภายใน" },
+  { value: "audio", label: "เครื่องเสียง" },
+  { value: "lighting", label: "ไฟ" },
+  { value: "gas_kit", label: "ติดแก๊ส LPG / NGV" },
+  { value: "other", label: "อื่น ๆ" },
+] as const
+
+export const MODIFICATION_CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  MODIFICATION_CATEGORIES.map((c) => [c.value, c.label])
+)
+
+export const LEGAL_STATUS_LABELS: Record<string, string> = {
+  registered: "แจ้งขนส่ง / ลงเล่มแล้ว",
+  not_registered: "ยังไม่ได้แจ้งขนส่ง",
+  not_required: "ไม่ต้องแจ้ง",
+}
+
 // Trust filters — rod2buy collects these but competitors don't let you filter by them
 export const TRUST_FILTERS = [
   { key: "one_owner", label: "มือเดียว" },

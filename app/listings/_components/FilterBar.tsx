@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
   CAR_BRANDS,
   PROVINCES,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/constants"
 
 // Filters inside the collapsible "more" panel
-const ADVANCED_KEYS = ["cab_type", "drivetrain", "cc", "seats_min", "year_max", "seller_type"]
+const ADVANCED_KEYS = ["cab_type", "drivetrain", "cc", "seats_min", "year_max", "seller_type", "mods"]
 
 export default function FilterBar() {
   const router = useRouter()
@@ -43,6 +43,21 @@ export default function FilterBar() {
   )
   const toggle = (key: string) => update(key, searchParams.get(key) === "1" ? "" : "1")
 
+  // Mobile: filters live in a bottom sheet; desktop: inline (sheet classes reset at sm:)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  useEffect(() => {
+    if (!sheetOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setSheetOpen(false)
+    window.addEventListener("keydown", onKey)
+    return () => {
+      document.body.style.overflow = prev
+      window.removeEventListener("keydown", onKey)
+    }
+  }, [sheetOpen])
+  const activeCount = [...searchParams.keys()].filter((k) => !["q", "page", "sort"].includes(k)).length
+
   const clearAll = () => {
     setQ("")
     router.push("/listings")
@@ -50,7 +65,7 @@ export default function FilterBar() {
   const hasFilters = [...searchParams.keys()].some((k) => k !== "page" && k !== "sort")
 
   const selectClass =
-    "text-sm border border-zinc-200 rounded-xl px-3 py-2 bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 cursor-pointer"
+    "w-full sm:w-auto text-sm border border-zinc-200 rounded-xl px-3 py-2.5 sm:py-2 bg-white text-zinc-700 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 cursor-pointer"
 
   return (
     <div className="bg-white rounded-2xl border border-zinc-200 p-4 mb-6 shadow-sm space-y-3">
@@ -83,6 +98,64 @@ export default function FilterBar() {
           ค้นหา
         </button>
       </form>
+
+      {/* Mobile bar: open the sheet */}
+      <div className="flex gap-2 sm:hidden">
+        <button
+          type="button"
+          onClick={() => setSheetOpen(true)}
+          className="flex-1 flex items-center justify-center gap-2 text-sm font-medium border border-zinc-200 rounded-xl py-2.5 text-zinc-700 active:bg-zinc-50"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h18M6 12h12M10 19.5h4" />
+          </svg>
+          ตัวกรอง & เรียงลำดับ
+          {activeCount > 0 && (
+            <span className="min-w-5 h-5 px-1.5 rounded-full bg-amber-500 text-zinc-900 text-xs font-semibold flex items-center justify-center">
+              {activeCount}
+            </span>
+          )}
+        </button>
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={clearAll}
+            className="shrink-0 text-sm text-amber-600 font-medium px-3 rounded-xl active:bg-amber-50"
+          >
+            ล้าง
+          </button>
+        )}
+      </div>
+
+      {sheetOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 sm:hidden" onClick={() => setSheetOpen(false)} aria-hidden />
+      )}
+
+      <div
+        role={sheetOpen ? "dialog" : undefined}
+        aria-modal={sheetOpen || undefined}
+        aria-label="ตัวกรอง"
+        className={`${
+          sheetOpen
+            ? "fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto bg-white rounded-t-3xl px-4 pt-2 shadow-2xl space-y-3"
+            : "hidden"
+        } sm:static sm:block sm:max-h-none sm:overflow-visible sm:bg-transparent sm:rounded-none sm:p-0 sm:shadow-none sm:space-y-3`}
+      >
+        {/* Sheet header (mobile) */}
+        <div className="sm:hidden sticky top-0 bg-white pt-2 pb-1 -mx-4 px-4 z-10">
+          <div className="w-10 h-1 rounded-full bg-zinc-200 mx-auto mb-3" />
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-zinc-900">ตัวกรอง</p>
+            <button
+              type="button"
+              onClick={() => setSheetOpen(false)}
+              className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center"
+              aria-label="ปิดตัวกรอง"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
 
       <div className="flex flex-wrap gap-2 items-center">
         {/* Brand */}
@@ -173,7 +246,7 @@ export default function FilterBar() {
         </select>
 
         {/* Price range */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 w-full sm:w-auto">
           <select
             value={searchParams.get("price_min") ?? ""}
             onChange={(e) => update("price_min", e.target.value)}
@@ -221,7 +294,7 @@ export default function FilterBar() {
         {hasFilters && (
           <button
             onClick={clearAll}
-            className="text-sm text-amber-600 hover:text-amber-700 font-medium px-3 py-2 rounded-xl hover:bg-amber-50 transition-colors"
+            className="hidden sm:inline-block text-sm text-amber-600 hover:text-amber-700 font-medium px-3 py-2 rounded-xl hover:bg-amber-50 transition-colors"
           >
             ล้างตัวกรอง
           </button>
@@ -244,6 +317,7 @@ export default function FilterBar() {
 
       {/* Trust chips — rod2buy's edge over other marketplaces */}
       <div className="flex flex-wrap gap-2 items-center">
+        <p className="w-full text-xs font-medium text-zinc-500 sm:hidden">ความน่าเชื่อถือ</p>
         {TRUST_FILTERS.map((f) => {
           const on = searchParams.get(f.key) === "1"
           return (
@@ -267,14 +341,15 @@ export default function FilterBar() {
           type="button"
           onClick={() => setShowMore((v) => !v)}
           aria-expanded={showMore}
-          className="text-sm text-zinc-500 hover:text-zinc-800 font-medium px-2 py-1.5 sm:ml-auto"
+          className="hidden sm:inline-block text-sm text-zinc-500 hover:text-zinc-800 font-medium px-2 py-1.5 sm:ml-auto"
         >
           {showMore ? "ซ่อนตัวกรองเพิ่มเติม ▴" : "ตัวกรองเพิ่มเติม ▾"}
         </button>
       </div>
 
-      {showMore && (
-        <div className="flex flex-wrap gap-2 items-center pt-3 border-t border-zinc-100">
+      {/* Advanced — always open inside the mobile sheet */}
+      <div className={`${showMore ? "sm:flex" : "sm:hidden"} flex flex-wrap gap-2 items-center pt-3 border-t border-zinc-100`}>
+        <p className="w-full text-xs font-medium text-zinc-500 sm:hidden">ตัวกรองเพิ่มเติม</p>
           {/* Seller type */}
           <select
             value={searchParams.get("seller_type") ?? ""}
@@ -285,6 +360,19 @@ export default function FilterBar() {
             <option value="">รถบ้าน + เต็นท์</option>
             <option value="private">เฉพาะรถบ้าน</option>
             <option value="dealer">เฉพาะเต็นท์</option>
+          </select>
+
+          {/* Modifications */}
+          <select
+            value={searchParams.get("mods") ?? ""}
+            onChange={(e) => update("mods", e.target.value)}
+            className={selectClass}
+            aria-label="สภาพการแต่ง"
+          >
+            <option value="">เดิม + แต่ง</option>
+            <option value="stock">เดิมๆ ทั้งคัน</option>
+            <option value="modified">รถแต่ง</option>
+            <option value="heavy">แต่งจัดเต็ม / จูน</option>
           </select>
 
           {/* Cab type — pickups only */}
@@ -363,8 +451,19 @@ export default function FilterBar() {
               </option>
             ))}
           </select>
+      </div>
+
+        {/* Sheet footer (mobile) */}
+        <div className="sm:hidden sticky bottom-0 bg-white -mx-4 px-4 py-3 border-t border-zinc-100">
+          <button
+            type="button"
+            onClick={() => setSheetOpen(false)}
+            className="w-full bg-zinc-900 text-white text-sm font-semibold py-3 rounded-xl"
+          >
+            ดูผลลัพธ์
+          </button>
         </div>
-      )}
+      </div>
     </div>
   )
 }

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/supabase/server"
-import { listingSchema } from "@/lib/schemas"
+import { listingSchema, modificationSchema, type ModificationInput } from "@/lib/schemas"
 import { logAudit } from "@/lib/audit"
 
 export interface CreateListingPayload {
@@ -25,6 +25,7 @@ export interface CreateListingPayload {
   seats?: number
   seller_type: string
   district?: string
+  modification_level: string
   num_owners: number
   finance_status: string
   accident_history: string
@@ -62,6 +63,7 @@ function parsePayload(payload: CreateListingPayload) {
     seats: payload.seats ? Number(payload.seats) : undefined,
     seller_type: payload.seller_type,
     district: payload.district,
+    modification_level: payload.modification_level,
     num_owners: Number(payload.num_owners),
     finance_status: payload.finance_status,
     accident_history: payload.accident_history,
@@ -93,6 +95,7 @@ function toRow(d: NonNullable<ReturnType<typeof parsePayload>["data"]>) {
     seats: d.seats ?? null,
     seller_type: d.seller_type,
     district: d.district?.trim() || null,
+    modification_level: d.modification_level,
     num_owners: d.num_owners,
     finance_status: d.finance_status,
     accident_history: d.accident_history,
@@ -406,6 +409,63 @@ export async function deleteCarEvent(eventId: string, listingId: string): Promis
   if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
 
   const { error } = await supabase.from("car_events").delete().eq("id", eventId).eq("listing_id", listingId)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/sell/edit/${listingId}`)
+  revalidatePath(`/listings/${listingId}`)
+  return {}
+}
+
+// ── Modifications (listing_modifications) ─────────────
+export async function addModification(
+  listingId: string,
+  input: ModificationInput
+): Promise<Result> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
+
+  const parsed = modificationSchema.safeParse(input)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+  const d = parsed.data
+
+  // RLS also enforces ownership; this gives a clearer error message
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("id", listingId)
+    .eq("user_id", user.id)
+    .maybeSingle()
+  if (!listing) return { error: "ไม่พบประกาศ" }
+
+  const { error } = await supabase.from("listing_modifications").insert({
+    listing_id: listingId,
+    category: d.category,
+    item: d.item,
+    stock_spec: d.stock_spec || null,
+    modified_spec: d.modified_spec || null,
+    stock_part_included: d.stock_part_included,
+    legal_status: d.legal_status,
+    has_receipt: d.has_receipt,
+    installed_at: d.installed_at || null,
+  })
+  if (error) return { error: `บันทึกไม่สำเร็จ: ${error.message}` }
+
+  revalidatePath(`/sell/edit/${listingId}`)
+  revalidatePath(`/listings/${listingId}`)
+  return {}
+}
+
+export async function deleteModification(id: string, listingId: string): Promise<Result> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
+
+  const { error } = await supabase.from("listing_modifications").delete().eq("id", id).eq("listing_id", listingId)
   if (error) return { error: error.message }
 
   revalidatePath(`/sell/edit/${listingId}`)

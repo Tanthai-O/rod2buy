@@ -38,6 +38,7 @@ export const listingSchema = z.object({
   seats: z.number().int().min(1).max(16).optional(),
   seller_type: z.enum(["private", "dealer"]).default("private"),
   district: z.string().max(100).optional(),
+  modification_level: z.enum(["stock", "light", "moderate", "heavy"]).default("stock"),
 
   // Document & history
   num_owners: z.number().int().min(1).max(10).default(1),
@@ -65,3 +66,23 @@ export const profileSchema = z.object({
 })
 
 export type ProfileInput = z.infer<typeof profileSchema>
+
+export const modificationSchema = z.object({
+  category: z.enum([
+    "engine", "forced_induction", "exhaust", "suspension", "wheels",
+    "brakes", "body", "interior", "audio", "lighting", "gas_kit", "other",
+  ]),
+  item: z.string().trim().min(1, "กรุณาระบุชื่อรายการ").max(100, "ชื่อรายการยาวเกินไป"),
+  stock_spec: z.string().trim().max(200, "ข้อความยาวเกินไป").optional(),
+  modified_spec: z.string().trim().max(200, "ข้อความยาวเกินไป").optional(),
+  stock_part_included: z.boolean().default(false),
+  legal_status: z.enum(["registered", "not_registered", "not_required"]).default("not_required"),
+  has_receipt: z.boolean().default(false),
+  installed_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine((d) => new Date(d) <= new Date(), "วันที่ต้องไม่เกินวันนี้")
+    .optional(),
+})
+
+export type ModificationInput = z.infer<typeof modificationSchema>

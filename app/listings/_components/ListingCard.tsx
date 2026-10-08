@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Listing } from "@/types/listing"
-import { FUEL_LABELS, BODY_TYPE_LABELS } from "@/lib/constants"
+import { FUEL_LABELS, BODY_TYPE_LABELS, MODIFICATION_LEVEL_LABELS } from "@/lib/constants"
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("th-TH").format(price)
@@ -78,6 +78,11 @@ export default function ListingCard({ listing }: { listing: Listing }) {
           <span className="inline-flex text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full">
             {FUEL_LABELS[listing.fuel_type] ?? listing.fuel_type}
           </span>
+          {listing.modification_level && listing.modification_level !== "stock" && (
+            <span className="inline-flex text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">
+              {MODIFICATION_LEVEL_LABELS[listing.modification_level]}
+            </span>
+          )}
           {listing.body_type && (
             <span className="inline-flex text-xs bg-zinc-100 text-zinc-600 px-2 py-0.5 rounded-full">
               {BODY_TYPE_LABELS[listing.body_type]}

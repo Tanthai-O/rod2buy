@@ -2,6 +2,8 @@ export type BodyType =
   | "sedan" | "hatchback" | "pickup" | "suv" | "ppv"
   | "mpv" | "van" | "coupe" | "convertible" | "wagon"
 
+export type ModificationLevel = "stock" | "light" | "moderate" | "heavy"
+
 export interface Listing {
   id: string
   title: string
@@ -25,6 +27,7 @@ export interface Listing {
   seats?: number | null
   seller_type?: "private" | "dealer"
   district?: string | null
+  modification_level?: ModificationLevel
   user_id: string
   created_at: string
   updated_at?: string
@@ -47,4 +50,19 @@ export interface ListingPrivate {
   listing_id: string
   chassis_number: string | null
   registration_book_image: string | null
+}
+
+// Table listing_modifications (migration 007) — what the car IS now vs stock
+export interface ListingModification {
+  id: string
+  listing_id: string
+  category: string
+  item: string
+  stock_spec: string | null
+  modified_spec: string | null
+  stock_part_included: boolean
+  legal_status: "registered" | "not_registered" | "not_required"
+  has_receipt: boolean
+  installed_at: string | null
+  created_at: string
 }

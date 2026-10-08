@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
-import { Listing } from "@/types/listing"
+import { Listing, type ListingModification } from "@/types/listing"
 import { CarEvent } from "@/types/car-event"
 import { FUEL_LABELS, TRANSMISSION_LABELS, BODY_TYPE_LABELS, CAB_TYPE_LABELS, DRIVETRAIN_LABELS, SELLER_TYPE_LABELS } from "@/lib/constants"
 import ImageGallery from "./_components/ImageGallery"
@@ -10,6 +10,7 @@ import CarHistoryTimeline from "./_components/CarHistoryTimeline"
 import SaveButton from "./_components/SaveButton"
 import ContactSection from "./_components/ContactSection"
 import TrustSection from "./_components/TrustSection"
+import ModificationsSection from "./_components/ModificationsSection"
 import LiveViewers from "./_components/LiveViewers"
 import CompareButton from "./_components/CompareButton"
 import ReportButton from "./_components/ReportButton"
@@ -86,7 +87,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (listing.status !== "active" && !isOwner && !isAdmin) notFound()
 
   // phone / LINE are never selected here — ContactSection reveals them via RPC (migration 003)
-  const [eventsRes, priceRes, profileRes, scoreRes, relatedRes, savedRes, reviewsRes, contactedRes] = await Promise.all([
+  const [eventsRes, priceRes, profileRes, scoreRes, relatedRes, savedRes, reviewsRes, contactedRes, modsRes] = await Promise.all([
     supabase.from("car_events").select("*").eq("listing_id", id).order("event_date", { ascending: true }),
     supabase.from("price_estimates").select("*").eq("brand", listing.brand).eq("model", listing.model).eq("year", listing.year).maybeSingle(),
     listing.user_id
@@ -116,9 +117,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
           .limit(1)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase.from("listing_modifications").select("*").eq("listing_id", id).order("created_at", { ascending: true }),
   ])
 
   const events = (eventsRes.data ?? []) as CarEvent[]
+  const modifications = (modsRes.data ?? []) as ListingModification[]
   const priceEstimate = priceRes.data as {
     avg_price: number; min_price: number; max_price: number; sample_count: number
   } | null
@@ -287,6 +290,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
                 <h2 className="font-semibold text-zinc-900 mb-3">รายละเอียดเพิ่มเติม</h2>
                 <p className="text-sm text-zinc-700 leading-relaxed whitespace-pre-line">{listing.description}</p>
               </section>
+            )}
+
+            {/* Modifications — hidden for stock cars with nothing listed */}
+            {(listing.modification_level && listing.modification_level !== "stock" || modifications.length > 0) && (
+              <ModificationsSection level={listing.modification_level ?? "stock"} modifications={modifications} />
             )}
 
             {/* Car history */}

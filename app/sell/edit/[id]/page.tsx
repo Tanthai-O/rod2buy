@@ -2,10 +2,11 @@ import { notFound, redirect } from "next/navigation"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
-import type { Listing, ListingPrivate } from "@/types/listing"
+import type { Listing, ListingPrivate, ListingModification } from "@/types/listing"
 import type { CarEvent } from "@/types/car-event"
 import SellForm from "../../_components/SellForm"
 import CarEventsEditor from "../../_components/CarEventsEditor"
+import ModificationsEditor from "../../_components/ModificationsEditor"
 
 export const metadata: Metadata = {
   title: "แก้ไขประกาศ | rod2buy",
@@ -23,10 +24,11 @@ export default async function EditListingPage({ params }: PageProps) {
   } = await supabase.auth.getUser()
   if (!user) redirect(`/login?redirectTo=/sell/edit/${id}`)
 
-  const [{ data: listing }, { data: events }, { data: priv }] = await Promise.all([
+  const [{ data: listing }, { data: events }, { data: priv }, { data: mods }] = await Promise.all([
     supabase.from("listings").select("*").eq("id", id).eq("user_id", user.id).maybeSingle(),
     supabase.from("car_events").select("*").eq("listing_id", id).order("event_date", { ascending: true }),
     supabase.from("listing_private").select("*").eq("listing_id", id).maybeSingle(),
+    supabase.from("listing_modifications").select("*").eq("listing_id", id).order("created_at", { ascending: true }),
   ])
   if (!listing) notFound()
 
@@ -55,6 +57,8 @@ export default async function EditListingPage({ params }: PageProps) {
         </header>
 
         <CarEventsEditor listingId={l.id} events={(events ?? []) as CarEvent[]} />
+
+        <ModificationsEditor listingId={l.id} modifications={(mods ?? []) as ListingModification[]} />
 
         <SellForm listing={l} privateData={(priv as ListingPrivate | null) ?? null} />
       </div>

@@ -17,6 +17,7 @@ import {
   DRIVETRAINS,
   SEAT_OPTIONS,
   SELLER_TYPE_LABELS,
+  MODIFICATION_LEVELS,
 } from "@/lib/constants"
 import ImageUploader from "./ImageUploader"
 import PriceEstimate from "./PriceEstimate"
@@ -44,6 +45,7 @@ interface FormState {
   seats: string
   seller_type: "private" | "dealer"
   district: string
+  modification_level: "stock" | "light" | "moderate" | "heavy"
   // document & history
   num_owners: string
   finance_status: "clear" | "financing" | "paid_off"
@@ -59,7 +61,7 @@ const EMPTY: FormState = {
   fuel_type: "", transmission: "auto", price: "",
   negotiable: false, province: "", description: "",
   variant: "", body_type: "", cab_type: "", engine_cc: "", drivetrain: "", seats: "",
-  seller_type: "private", district: "",
+  seller_type: "private", district: "", modification_level: "stock",
   num_owners: "1", finance_status: "clear", accident_history: "none",
   flood_damage: false, chassis_number: "", registration_province: "", tax_expiry: "",
 }
@@ -89,6 +91,7 @@ function fromListing(l: Listing, priv: ListingPrivate | null): FormState {
     seats: l.seats ? String(l.seats) : "",
     seller_type: l.seller_type ?? "private",
     district: l.district ?? "",
+    modification_level: l.modification_level ?? "stock",
     num_owners: String(l.num_owners ?? 1),
     finance_status: l.finance_status ?? "clear",
     accident_history: l.accident_history ?? "none",
@@ -172,6 +175,7 @@ export default function SellForm({
     seats: form.seats ? Number(form.seats) : undefined,
     seller_type: form.seller_type,
     district: form.district.trim() || undefined,
+    modification_level: form.modification_level,
   })
 
   // ── Client-side Zod validation ──────────────────────
@@ -495,6 +499,32 @@ export default function SellForm({
               {SEAT_OPTIONS.map((n) => <option key={n} value={n}>{n} ที่นั่ง</option>)}
             </select>
           </div>
+        </div>
+      </section>
+
+      {/* ── Section 2b: สภาพการแต่ง ───────────────────── */}
+      <section className="bg-white rounded-2xl border border-zinc-100 p-5 space-y-3">
+        <div>
+          <h2 className="font-semibold text-zinc-900">สภาพการแต่ง</h2>
+          <p className="text-xs text-zinc-400 mt-0.5">
+            {isEdit
+              ? "รายการของแต่ง (เดิม ↔ แต่ง) เพิ่มได้ในส่วน \"ของแต่ง\" ด้านบน"
+              : "ถ้าแต่งมา เพิ่มรายการของแต่ง (เดิม ↔ แต่ง) ได้ในหน้าแก้ไขหลังลงประกาศ"}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {MODIFICATION_LEVELS.map((m) => (
+            <button key={m.value} type="button" onClick={() => set("modification_level", m.value)}
+              aria-pressed={form.modification_level === m.value}
+              className={`text-left px-4 py-2.5 rounded-xl border transition-colors ${
+                form.modification_level === m.value
+                  ? "bg-amber-50 border-amber-500"
+                  : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+              }`}>
+              <p className="text-sm font-medium text-zinc-900">{m.label}</p>
+              <p className="text-xs text-zinc-500">{m.hint}</p>
+            </button>
+          ))}
         </div>
       </section>
 

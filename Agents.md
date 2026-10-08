@@ -26,6 +26,8 @@
 | `reports` | แจ้ง listing น่าสงสัย |
 | `verification_requests` | คิวยืนยันตัวตน (รูปบัตร ปชช.) ให้ admin ตรวจ |
 | `audit_logs` | บันทึก action สำคัญ (admin อ่านได้) |
+| `listing_private` | เลขตัวถัง + path เล่มทะเบียน (เจ้าของ + admin เท่านั้น) |
+| `listing_modifications` | รายการของแต่ง เดิม ↔ แต่ง |
 
 ## Supabase Views
 - `price_estimates` — ราคาเฉลี่ยต่อ brand/model/year (Price Estimator)
@@ -38,6 +40,8 @@
 - `supabase/migrations/004_private_docs.sql` — ย้ายเลขตัวถัง + path เล่มทะเบียนไปตาราง `listing_private` (เจ้าของ + admin อ่านได้เท่านั้น), listings เหลือแค่ flag `has_registration_book` / `has_chassis_number` (trigger คำนวณให้ แก้เองไม่ได้)
 - `supabase/migrations/005_listing_specs.sql` — สเปคแบบมีโครงสร้าง: `variant`, `body_type`, `cab_type` (กระบะเท่านั้น), `engine_cc`, `drivetrain`, `seats`, `seller_type`, `district` + partial index สำหรับหน้า browse
 - `supabase/migrations/006_fix_listing_policies.sql` — ลบ policy เก่า "View listings" (สร้างใน dashboard) ที่อ่าน `profiles.role` ตรงๆ ทำให้ anon เปิด /listings ไม่ได้ — policy ที่เช็ก admin ให้ใช้ `public.is_admin()` เสมอ
+- `supabase/migrations/007_modifications.sql` — รถแต่ง: `listings.modification_level` (stock/light/moderate/heavy) + ตาราง `listing_modifications` (เดิม ↔ แต่ง, ของเดิมแถม, สถานะแจ้งขนส่ง) — Price Estimator ไม่นับรถ heavy
+- `supabase/seed.sql` — รถตัวอย่าง 20 คัน (แต่งขึ้นเอง) ผูกกับ admin คนแรก, รันหลัง migration ครบ
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
 ## Storage Buckets

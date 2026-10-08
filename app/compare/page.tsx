@@ -3,7 +3,7 @@ import Image from "next/image"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
 import type { Listing } from "@/types/listing"
-import { FUEL_LABELS, TRANSMISSION_LABELS, BODY_TYPE_LABELS, CAB_TYPE_LABELS, DRIVETRAIN_LABELS, SELLER_TYPE_LABELS } from "@/lib/constants"
+import { FUEL_LABELS, TRANSMISSION_LABELS, BODY_TYPE_LABELS, CAB_TYPE_LABELS, DRIVETRAIN_LABELS, SELLER_TYPE_LABELS, MODIFICATION_LEVEL_LABELS } from "@/lib/constants"
 import CompareRemoveButton from "./_components/CompareRemoveButton"
 
 export const metadata: Metadata = {
@@ -75,6 +75,7 @@ export default async function ComparePage({ searchParams }: PageProps) {
     { label: "เครื่องยนต์", render: (l) => (l.engine_cc ? `${fmt(l.engine_cc)} cc` : "–") },
     { label: "ขับเคลื่อน", render: (l) => (l.drivetrain ? DRIVETRAIN_LABELS[l.drivetrain] : "–") },
     { label: "ที่นั่ง", render: (l) => (l.seats ? `${l.seats} ที่นั่ง` : "–") },
+    { label: "การแต่ง", render: (l) => MODIFICATION_LEVEL_LABELS[l.modification_level ?? "stock"] },
     { label: "ผู้ขาย", render: (l) => SELLER_TYPE_LABELS[l.seller_type ?? "private"] },
     { label: "สี", render: (l) => l.color ?? "–" },
     { label: "จังหวัด", render: (l) => l.province },
