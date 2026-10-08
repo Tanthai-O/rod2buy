@@ -14,6 +14,7 @@ interface Props {
   listing: Listing
   seller: SellerInfo | null
   regBookSignedUrl: string | null
+  chassisNumber: string | null
 }
 
 const FINANCE_LABELS: Record<string, string> = {
@@ -42,7 +43,7 @@ function dateStr(iso: string) {
   })
 }
 
-export default function ModerateCard({ listing, seller, regBookSignedUrl }: Props) {
+export default function ModerateCard({ listing, seller, regBookSignedUrl, chassisNumber }: Props) {
   const [showRejectForm, setShowRejectForm] = useState(false)
   const [rejectReason, setRejectReason] = useState("")
   const [isApproving, setIsApproving] = useState(false)
@@ -178,7 +179,7 @@ export default function ModerateCard({ listing, seller, regBookSignedUrl }: Prop
                 <tr>
                   <td className="text-zinc-500 pr-3 pb-1.5 whitespace-nowrap">เลขตัวถัง</td>
                   <td className="text-zinc-800 pb-1.5 font-mono text-xs">
-                    {listing.chassis_number ?? <span className="text-zinc-300">—</span>}
+                    {chassisNumber ?? <span className="text-zinc-300">—</span>}
                   </td>
                 </tr>
                 <tr>

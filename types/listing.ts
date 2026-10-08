@@ -18,8 +18,8 @@ export interface Listing {
   updated_at?: string
 
   // Trust & document fields (added in migration 001)
-  registration_book_image?: string | null
-  chassis_number?: string | null
+  has_registration_book?: boolean
+  has_chassis_number?: boolean
   registration_province?: string | null
   tax_expiry?: string | null
   num_owners?: number
@@ -28,4 +28,11 @@ export interface Listing {
   flood_damage?: boolean
   inspection_report_url?: string | null
   rejection_reason?: string | null
+}
+
+// Owner + admin only (table listing_private, migration 004) — never shown publicly
+export interface ListingPrivate {
+  listing_id: string
+  chassis_number: string | null
+  registration_book_image: string | null
 }

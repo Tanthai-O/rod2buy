@@ -73,10 +73,22 @@ function toRow(d: NonNullable<ReturnType<typeof parsePayload>["data"]>) {
     finance_status: d.finance_status,
     accident_history: d.accident_history,
     flood_damage: d.flood_damage,
-    chassis_number: d.chassis_number?.trim() || null,
     registration_province: d.registration_province?.trim() || null,
     tax_expiry: d.tax_expiry || null,
   }
+}
+
+type Supabase = Awaited<ReturnType<typeof createClient>>
+
+// Chassis number + reg book are owner/admin-only (listing_private, migration 004)
+async function savePrivate(
+  supabase: Supabase,
+  listingId: string,
+  fields: { chassis_number?: string | null; registration_book_image?: string }
+) {
+  return supabase
+    .from("listing_private")
+    .upsert({ listing_id: listingId, ...fields, updated_at: new Date().toISOString() })
 }
 
 export async function createListing(
@@ -130,6 +142,15 @@ export async function createListing(
     return { error: `ไม่สามารถสร้างประกาศได้: ${insertError.message}` }
   }
 
+  const chassis = parsed.data.chassis_number?.trim() || null
+  if (chassis) {
+    const { error: privError } = await savePrivate(supabase, listing.id, { chassis_number: chassis })
+    if (privError) {
+      await supabase.from("listings").delete().eq("id", listing.id).eq("user_id", user.id)
+      return { error: `ไม่สามารถสร้างประกาศได้: ${privError.message}` }
+    }
+  }
+
   await logAudit("listing.create", listing.id)
 
   return { id: listing.id }
@@ -159,10 +180,19 @@ export async function updateListing(
     .maybeSingle()
   if (!existing) return { error: "ไม่พบประกาศ หรือคุณไม่ใช่เจ้าของ" }
 
+  const { data: existingPrivate } = await supabase
+    .from("listing_private")
+    .select("chassis_number")
+    .eq("listing_id", listingId)
+    .maybeSingle()
+
   const row = toRow(parsed.data)
-  const changed = (Object.keys(row) as (keyof typeof row)[]).filter(
+  const changed: string[] = (Object.keys(row) as (keyof typeof row)[]).filter(
     (k) => String(row[k] ?? "") !== String(existing[k] ?? "")
   )
+  const chassis = parsed.data.chassis_number?.trim() || null
+  const chassisChanged = chassis !== (existingPrivate?.chassis_number ?? null)
+  if (chassisChanged) changed.push("chassis_number")
   if (changed.length === 0 && !existing.rejection_reason) {
     return { status: existing.status }
   }
@@ -180,6 +210,11 @@ export async function updateListing(
     .eq("user_id", user.id)
 
   if (error) return { error: `บันทึกไม่สำเร็จ: ${error.message}` }
+
+  if (chassisChanged) {
+    const { error: privError } = await savePrivate(supabase, listingId, { chassis_number: chassis })
+    if (privError) return { error: `บันทึกเลขตัวถังไม่สำเร็จ: ${privError.message}` }
+  }
 
   await logAudit("listing.update", listingId, { changed })
   revalidatePath(`/listings/${listingId}`)
@@ -215,18 +250,23 @@ export async function updateListingImages(
 
   const { data: existing } = await supabase
     .from("listings")
-    .select("images, status, registration_book_image")
+    .select("images, status")
     .eq("id", listingId)
     .eq("user_id", user.id)
     .maybeSingle()
   if (!existing) return { error: "ไม่พบประกาศ" }
+
+  const { data: existingPrivate } = await supabase
+    .from("listing_private")
+    .select("registration_book_image")
+    .eq("listing_id", listingId)
+    .maybeSingle()
 
   const oldImages = (existing.images ?? []) as string[]
   const added = images.filter((u) => !oldImages.includes(u))
   const removed = oldImages.filter((u) => !images.includes(u))
 
   const update: Record<string, unknown> = { images }
-  if (registrationBookPath) update.registration_book_image = registrationBookPath
   if (existing.status === "active" && (added.length > 0 || registrationBookPath)) {
     update.status = "pending"
   }
@@ -241,11 +281,18 @@ export async function updateListingImages(
     return { error: `อัปเดตรูปภาพไม่สำเร็จ: ${error.message}` }
   }
 
+  if (registrationBookPath) {
+    const { error: privError } = await savePrivate(supabase, listingId, {
+      registration_book_image: registrationBookPath,
+    })
+    if (privError) return { error: `บันทึกรูปเล่มทะเบียนไม่สำเร็จ: ${privError.message}` }
+  }
+
   const removedPaths = removed.map((u) => u.split("/car-images/")[1]).filter(Boolean)
   if (removedPaths.length > 0) {
     await supabase.storage.from("car-images").remove(removedPaths)
   }
-  const oldRegBook = existing.registration_book_image as string | null
+  const oldRegBook = (existingPrivate?.registration_book_image ?? null) as string | null
   if (registrationBookPath && oldRegBook && oldRegBook !== registrationBookPath) {
     await removeRegBook(supabase, oldRegBook)
   }
@@ -257,7 +304,7 @@ export async function updateListingImages(
 
 // Registration books live in the private verification-docs bucket; older ones in car-images.
 async function removeRegBook(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: Supabase,
   path: string
 ) {
   const p = path.startsWith("http") ? path.split("/car-images/")[1] : path

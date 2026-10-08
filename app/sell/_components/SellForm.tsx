@@ -5,7 +5,8 @@ import Link from "next/link"
 import { createClient } from "@/supabase/client"
 import { listingSchema } from "@/lib/schemas"
 import { createListing, updateListing, updateListingImages, rollbackListing } from "../actions"
-import type { Listing } from "@/types/listing"
+import type { Listing, ListingPrivate } from "@/types/listing"
+import { stripImageMetadata } from "@/lib/strip-metadata"
 import {
   CAR_BRANDS,
   PROVINCES,
@@ -49,7 +50,7 @@ const EMPTY: FormState = {
 
 const NEGOTIABLE_NOTE = "(ราคาต่อรองได้)"
 
-function fromListing(l: Listing): FormState {
+function fromListing(l: Listing, priv: ListingPrivate | null): FormState {
   const desc = l.description ?? ""
   const negotiable = desc.includes(NEGOTIABLE_NOTE)
   return {
@@ -68,7 +69,7 @@ function fromListing(l: Listing): FormState {
     finance_status: l.finance_status ?? "clear",
     accident_history: l.accident_history ?? "none",
     flood_damage: l.flood_damage ?? false,
-    chassis_number: l.chassis_number ?? "",
+    chassis_number: priv?.chassis_number ?? "",
     registration_province: l.registration_province ?? "",
     tax_expiry: l.tax_expiry ?? "",
   }
@@ -94,10 +95,16 @@ function Label({ children, required }: { children: React.ReactNode; required?: b
 }
 
 // ─── Component ────────────────────────────────────────
-export default function SellForm({ listing }: { listing?: Listing }) {
+export default function SellForm({
+  listing,
+  privateData = null,
+}: {
+  listing?: Listing
+  privateData?: ListingPrivate | null
+}) {
   const isEdit = !!listing
-  const hasRegBook = !!listing?.registration_book_image
-  const [form, setForm] = useState<FormState>(listing ? fromListing(listing) : EMPTY)
+  const hasRegBook = !!privateData?.registration_book_image
+  const [form, setForm] = useState<FormState>(listing ? fromListing(listing, privateData) : EMPTY)
   const [existingImages, setExistingImages] = useState<string[]>(listing?.images ?? [])
   const [images, setImages] = useState<File[]>([])
   const [resultStatus, setResultStatus] = useState<string | null>(null)
@@ -226,11 +233,11 @@ export default function SellForm({ listing }: { listing?: Listing }) {
       // ── 2. Upload car images ──────────────────────────
       const imageUrls: string[] = []
       for (let i = 0; i < images.length; i++) {
-        const file = images[i]
         setUploadStatus(`กำลังอัปโหลดรูป ${i + 1}/${images.length}…`)
+        // Remove EXIF/GPS before the photo goes to the public bucket
+        const file = await stripImageMetadata(images[i])
 
-        const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
-        const filename = `img_${crypto.randomUUID()}.${ext}`
+        const filename = `img_${crypto.randomUUID()}.jpg`
         const path = `${user.id}/${targetId}/${filename}`
 
         const { error: uploadErr } = await supabase.storage
@@ -246,13 +253,13 @@ export default function SellForm({ listing }: { listing?: Listing }) {
       let regBookUrl: string | undefined
       if (regBookFile) {
         setUploadStatus("กำลังอัปโหลดรูปเล่มทะเบียน…")
-        const ext = regBookFile.name.split(".").pop()?.toLowerCase() ?? "jpg"
+        const regBook = await stripImageMetadata(regBookFile)
         // Private bucket — only the owner and admins can read it
-        const path = `${user.id}/reg_book/${targetId}_${crypto.randomUUID()}.${ext}`
+        const path = `${user.id}/reg_book/${targetId}_${crypto.randomUUID()}.jpg`
 
         const { error: uploadErr } = await supabase.storage
           .from("verification-docs")
-          .upload(path, regBookFile, { contentType: regBookFile.type, upsert: false })
+          .upload(path, regBook, { contentType: regBook.type, upsert: false })
         if (uploadErr) throw new Error("อัปโหลดรูปเล่มทะเบียนล้มเหลว")
 
         // Store as path (not URL) — signed URL generated server-side for admin review
@@ -508,6 +515,7 @@ export default function SellForm({ listing }: { listing?: Listing }) {
             <input type="text" value={form.chassis_number}
               onChange={(e) => set("chassis_number", e.target.value)}
               placeholder="ตัวเลข 17 หลัก" maxLength={17} className={inputCls} />
+            <p className="text-xs text-zinc-400 mt-1">ไม่แสดงในประกาศ — ทีมงานใช้ตรวจสอบเท่านั้น</p>
           </div>
 
           {/* Registration province */}

@@ -52,12 +52,18 @@ export async function deleteListing(listingId: string) {
   // ดึงรายการรูปก่อนลบ
   const { data: listing } = await supabase
     .from("listings")
-    .select("images, registration_book_image")
+    .select("images")
     .eq("id", listingId)
     .eq("user_id", user.id)
     .single()
 
   if (!listing) throw new Error("Listing not found or unauthorized")
+
+  const { data: priv } = await supabase
+    .from("listing_private")
+    .select("registration_book_image")
+    .eq("listing_id", listingId)
+    .maybeSingle()
 
   // รวม paths ทั้งหมดที่ต้องลบ
   const images = (listing.images ?? []) as string[]
@@ -67,7 +73,7 @@ export async function deleteListing(listingId: string) {
     .filter(Boolean) as string[]
 
   // reg book stored as path — private verification-docs bucket (older ones in car-images)
-  const regBookPath = listing.registration_book_image as string | null
+  const regBookPath = (priv?.registration_book_image ?? null) as string | null
   const allPaths = [...imagePaths, ...(regBookPath ? [regBookPath] : [])]
 
   if (allPaths.length > 0) {

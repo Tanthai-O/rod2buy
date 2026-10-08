@@ -70,7 +70,7 @@ export default async function ComparePage({ searchParams }: PageProps) {
     { label: "ไฟแนนซ์", render: (l) => FINANCE[l.finance_status ?? "clear"] },
     { label: "ประวัติชน", render: (l) => ACCIDENT[l.accident_history ?? "none"] },
     { label: "น้ำท่วม", render: (l) => (l.flood_damage ? "เคย" : "ไม่เคย") },
-    { label: "เล่มทะเบียน", render: (l) => (l.registration_book_image ? "มี" : "ไม่มี") },
+    { label: "เล่มทะเบียน", render: (l) => (l.has_registration_book ? "มี" : "ไม่มี") },
   ]
 
   return (

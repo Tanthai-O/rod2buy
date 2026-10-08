@@ -196,7 +196,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
     ["เกียร์", TRANSMISSION_LABELS[listing.transmission] ?? listing.transmission],
     ["สี", listing.color ?? "ไม่ระบุ"],
     ["จังหวัด", listing.province],
-    ...(listing.chassis_number ? [["เลขตัวถัง", listing.chassis_number]] : []),
   ]
 
   return (

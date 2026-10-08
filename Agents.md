@@ -35,6 +35,7 @@
 - `supabase/migrations/001_trust.sql` — verification fields, audit_logs, bucket `verification-docs`
 - `supabase/migrations/002_features.sql` — กัน user ตั้งตัวเองเป็น admin / approve ประกาศเอง, reviews, reports, verification_requests, price_at_save, นิยาม views ใหม่
 - `supabase/migrations/003_contact_mfa.sql` — เบอร์/LINE อ่านผ่าน RPC `reveal_contact()` เท่านั้น (log + จำกัด 20 ผู้ขาย/วัน), รีวิวได้เฉพาะคนที่ติดต่อแล้ว, admin ต้องใช้ 2FA (aal2)
+- `supabase/migrations/004_private_docs.sql` — ย้ายเลขตัวถัง + path เล่มทะเบียนไปตาราง `listing_private` (เจ้าของ + admin อ่านได้เท่านั้น), listings เหลือแค่ flag `has_registration_book` / `has_chassis_number` (trigger คำนวณให้ แก้เองไม่ได้)
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
 ## Storage Buckets

@@ -2,7 +2,7 @@ import { requireAdminPage } from "@/lib/admin"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
-import type { Listing } from "@/types/listing"
+import type { Listing, ListingPrivate } from "@/types/listing"
 import ModerateCard from "./_components/ModerateCard"
 import VerificationCard, { type VerificationItem } from "./_components/VerificationCard"
 import ReportCard, { type ReportItem } from "./_components/ReportCard"
@@ -50,11 +50,19 @@ async function loadListings(supabase: Supabase) {
   const listings = (pendingListings ?? []) as Listing[]
   const sellerIds = [...new Set(listings.map((l) => l.user_id).filter(Boolean))]
 
+  // Chassis number + reg book live in listing_private (owner + admin only)
+  const { data: privateRows } = listings.length > 0
+    ? await supabase.from("listing_private").select("*").in("listing_id", listings.map((l) => l.id))
+    : { data: [] }
+  const privateMap: Record<string, ListingPrivate> = Object.fromEntries(
+    ((privateRows ?? []) as ListingPrivate[]).map((p) => [p.listing_id, p])
+  )
+
   const [sellersResult, ...signedUrls] = await Promise.all([
     sellerIds.length > 0
       ? supabase.from("profiles").select("id, display_name, id_verified").in("id", sellerIds)
       : Promise.resolve({ data: [] }),
-    ...listings.map((l) => signRegBookUrl(supabase, l.registration_book_image)),
+    ...listings.map((l) => signRegBookUrl(supabase, privateMap[l.id]?.registration_book_image)),
   ])
 
   const sellers = (sellersResult.data ?? []) as Array<{ id: string; display_name?: string; id_verified?: boolean }>
@@ -66,7 +74,7 @@ async function loadListings(supabase: Supabase) {
     regBookUrls[l.id] = (signedUrls[i] as string | null) ?? null
   })
 
-  return { listings, sellerMap, regBookUrls }
+  return { listings, sellerMap, regBookUrls, privateMap }
 }
 
 async function loadVerifications(supabase: Supabase): Promise<VerificationItem[]> {
@@ -187,7 +195,7 @@ function EmptyQueue({ text }: { text: string }) {
 }
 
 async function ListingsTab({ supabase }: { supabase: Supabase }) {
-  const { listings, sellerMap, regBookUrls } = await loadListings(supabase)
+  const { listings, sellerMap, regBookUrls, privateMap } = await loadListings(supabase)
   if (listings.length === 0) return <EmptyQueue text="ทุกประกาศได้รับการตรวจสอบแล้ว" />
   return (
     <div className="space-y-4">
@@ -198,6 +206,7 @@ async function ListingsTab({ supabase }: { supabase: Supabase }) {
           listing={listing}
           seller={sellerMap[listing.user_id] ?? null}
           regBookSignedUrl={regBookUrls[listing.id] ?? null}
+          chassisNumber={privateMap[listing.id]?.chassis_number ?? null}
         />
       ))}
     </div>

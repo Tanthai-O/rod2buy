@@ -30,8 +30,8 @@ const ACCIDENT_LABELS = {
 export default function TrustSection({ listing, sellerProfile }: Props) {
   const items: TrustItem[] = [
     {
-      ok: !!listing.registration_book_image,
-      label: listing.registration_book_image ? "มีเล่มทะเบียนรถ" : "ไม่มีรูปเล่มทะเบียน",
+      ok: !!listing.has_registration_book,
+      label: listing.has_registration_book ? "มีเล่มทะเบียนรถ" : "ไม่มีรูปเล่มทะเบียน",
     },
     {
       ok: listing.finance_status === "clear" || listing.finance_status === "paid_off",
