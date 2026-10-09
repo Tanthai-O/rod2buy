@@ -7,6 +7,7 @@ import { listingSchema } from "@/lib/schemas"
 import { createListing, updateListing, updateListingImages, rollbackListing } from "../actions"
 import type { Listing, ListingPrivate } from "@/types/listing"
 import { stripImageMetadata } from "@/lib/strip-metadata"
+import { CAR_MODELS, modelsForBrand } from "@/lib/car-models"
 import {
   CAR_BRANDS,
   PROVINCES,
@@ -142,6 +143,13 @@ export default function SellForm({
   const [error, setError] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
   const regBookInputRef = useRef<HTMLInputElement>(null)
+
+  // Model: pick from the catalog; free text only for models we don't list
+  const catalogModels = modelsForBrand(form.brand)
+  const [customModel, setCustomModel] = useState(
+    () => !!listing && !(CAR_MODELS[listing.brand] ?? []).some((m) => m.toLowerCase() === listing.model.toLowerCase())
+  )
+  const typingModel = customModel || catalogModels.length === 0
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -392,15 +400,47 @@ export default function SellForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label required>ยี่ห้อ</Label>
-            <select value={form.brand} onChange={(e) => set("brand", e.target.value)} className={selectCls}>
+            <select value={form.brand}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, brand: e.target.value, model: "" }))
+                setCustomModel(false)
+              }}
+              className={selectCls}>
               <option value="">เลือกยี่ห้อ</option>
               {CAR_BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
           <div>
             <Label required>รุ่น</Label>
-            <input type="text" value={form.model} onChange={(e) => set("model", e.target.value)}
-              placeholder="เช่น Camry, Civic, D-Max" className={inputCls} />
+            {typingModel ? (
+              <>
+                <input type="text" value={form.model} onChange={(e) => set("model", e.target.value)}
+                  placeholder={form.brand ? "พิมพ์ชื่อรุ่น" : "เลือกยี่ห้อก่อน"} disabled={!form.brand}
+                  maxLength={100} className={`${inputCls} disabled:bg-zinc-50`} />
+                {customModel && catalogModels.length > 0 && (
+                  <button type="button" onClick={() => { setCustomModel(false); set("model", "") }}
+                    className="text-xs text-amber-600 hover:text-amber-700 mt-1">
+                    ← เลือกจากรายการ
+                  </button>
+                )}
+              </>
+            ) : (
+              <select
+                value={catalogModels.find((m) => m.toLowerCase() === form.model.toLowerCase()) ?? ""}
+                onChange={(e) => {
+                  if (e.target.value === "__other") {
+                    setCustomModel(true)
+                    set("model", "")
+                  } else {
+                    set("model", e.target.value)
+                  }
+                }}
+                className={selectCls}>
+                <option value="">เลือกรุ่น</option>
+                {catalogModels.map((m) => <option key={m} value={m}>{m}</option>)}
+                <option value="__other">อื่น ๆ (พิมพ์เอง)</option>
+              </select>
+            )}
           </div>
           <div>
             <Label>รุ่นย่อย</Label>

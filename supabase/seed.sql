@@ -169,12 +169,12 @@ VALUES
     'Honda City e:HEV RS 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
   ),
   (
-    'Mazda', 'Mazda2', 2022, 489000,
+    'Mazda', '2', 2022, 489000,
     'ระยอง', 'petrol', 33000, '[]', 'active', 'auto',
     'สีแดง Soul Red',
     'Mazda2 1.3 SP ปี 22 เบนซิน สภาพสวยมาก ดูแลดี ราคาต่อรองได้',
     '1.3 SP', 'hatchback', NULL, 1298, '2wd', 5, 'private',
-    'Mazda Mazda2 1.3 SP 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+    'Mazda 2 1.3 SP 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
   );
 
 -- ── ตัวอย่างรถแต่ง: Civic RS (migration 007) ──────────

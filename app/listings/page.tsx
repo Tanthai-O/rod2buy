@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
+import { createClient } from "@/supabase/server"
 import FilterBar from "./_components/FilterBar"
 import ListingsContent from "./_components/ListingsContent"
 import ListingsSkeleton from "./_components/ListingsSkeleton"
@@ -14,7 +15,13 @@ interface PageProps {
   searchParams: Promise<Record<string, string>>
 }
 
-export default function ListingsPage({ searchParams }: PageProps) {
+export default async function ListingsPage({ searchParams }: PageProps) {
+  // Counts for the brand / model dropdowns (view from migration 008)
+  const supabase = await createClient()
+  const { data: modelCounts } = await supabase
+    .from("listing_model_counts")
+    .select("brand, model, listing_count")
+
   return (
     <main className="min-h-screen bg-zinc-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -27,7 +34,7 @@ export default function ListingsPage({ searchParams }: PageProps) {
 
         {/* FilterBar ต้อง wrap ใน Suspense เพราะใช้ useSearchParams */}
         <Suspense>
-          <FilterBar />
+          <FilterBar modelCounts={modelCounts ?? []} />
         </Suspense>
 
         <Suspense fallback={<ListingsSkeleton />}>

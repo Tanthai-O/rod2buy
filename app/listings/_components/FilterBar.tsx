@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   CAR_BRANDS,
   PROVINCES,
@@ -15,11 +15,18 @@ import {
   ENGINE_CC_OPTIONS,
   TRUST_FILTERS,
 } from "@/lib/constants"
+import { CAR_MODELS } from "@/lib/car-models"
+
+export interface ModelCount {
+  brand: string
+  model: string
+  listing_count: number
+}
 
 // Filters inside the collapsible "more" panel
 const ADVANCED_KEYS = ["cab_type", "drivetrain", "cc", "seats_min", "year_max", "seller_type", "mods"]
 
-export default function FilterBar() {
+export default function FilterBar({ modelCounts }: { modelCounts: ModelCount[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -28,6 +35,8 @@ export default function FilterBar() {
       const p = new URLSearchParams(searchParams.toString())
       if (value) p.set(key, value)
       else p.delete(key)
+      // A model belongs to one brand
+      if (key === "brand") p.delete("model")
       // Cab type only means something for pickups
       if (key === "body_type" && value !== "pickup") p.delete("cab_type")
       // เปลี่ยน filter แล้วกลับไปหน้าแรกเสมอ
@@ -41,6 +50,35 @@ export default function FilterBar() {
   const [showMore, setShowMore] = useState(() =>
     ADVANCED_KEYS.some((k) => searchParams.has(k))
   )
+  const brand = searchParams.get("brand") ?? ""
+  const model = searchParams.get("model") ?? ""
+
+  // Active listings per brand, and per model of the chosen brand. Model names are
+  // merged case-insensitively and shown with the catalog spelling when there is one.
+  const brandCounts = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const c of modelCounts) m[c.brand] = (m[c.brand] ?? 0) + c.listing_count
+    return m
+  }, [modelCounts])
+
+  const modelOptions = useMemo(() => {
+    if (!brand) return []
+    const catalog = new Map((CAR_MODELS[brand] ?? []).map((n) => [n.toLowerCase(), n]))
+    const merged = new Map<string, { name: string; count: number }>()
+    for (const c of modelCounts) {
+      if (c.brand !== brand) continue
+      const key = c.model.trim().toLowerCase()
+      const prev = merged.get(key)
+      merged.set(key, {
+        name: catalog.get(key) ?? prev?.name ?? c.model.trim(),
+        count: (prev?.count ?? 0) + c.listing_count,
+      })
+    }
+    // Keep the current selection visible even if it has no listings now
+    if (model && !merged.has(model.toLowerCase())) merged.set(model.toLowerCase(), { name: model, count: 0 })
+    return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name, "en", { numeric: true }))
+  }, [brand, model, modelCounts])
+
   const toggle = (key: string) => update(key, searchParams.get(key) === "1" ? "" : "1")
 
   // Mobile: filters live in a bottom sheet; desktop: inline (sheet classes reset at sm:)
@@ -169,9 +207,27 @@ export default function FilterBar() {
           {CAR_BRANDS.map((b) => (
             <option key={b} value={b}>
               {b}
+              {brandCounts[b] ? ` (${brandCounts[b]})` : ""}
             </option>
           ))}
         </select>
+
+        {/* Model — only after a brand is picked */}
+        {brand && (
+          <select
+            value={modelOptions.find((o) => o.name.toLowerCase() === model.toLowerCase())?.name ?? ""}
+            onChange={(e) => update("model", e.target.value)}
+            className={selectClass}
+            aria-label="รุ่น"
+          >
+            <option value="">ทุกรุ่น {brand}</option>
+            {modelOptions.map((o) => (
+              <option key={o.name} value={o.name}>
+                {o.name} ({o.count})
+              </option>
+            ))}
+          </select>
+        )}
 
         {/* Body type */}
         <select

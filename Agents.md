@@ -32,6 +32,10 @@
 ## Supabase Views
 - `price_estimates` — ราคาเฉลี่ยต่อ brand/model/year (Price Estimator)
 - `seller_scores` — คะแนน trust ของผู้ขาย (Seller Trust Score)
+- `listing_model_counts` — จำนวนประกาศ active ต่อ brand/model (dropdown ตัวกรอง)
+
+## Car model catalog
+- `lib/car-models.ts` — รายชื่อรุ่นต่อยี่ห้อ ฟอร์มขายเลือกจากนี้ (พิมพ์เองได้ผ่าน "อื่น ๆ") — รุ่นใหม่ออกให้เพิ่มที่ไฟล์นี้
 
 ## Migrations (รันตามลำดับใน Supabase SQL Editor)
 - `supabase/migrations/001_trust.sql` — verification fields, audit_logs, bucket `verification-docs`
@@ -41,6 +45,7 @@
 - `supabase/migrations/005_listing_specs.sql` — สเปคแบบมีโครงสร้าง: `variant`, `body_type`, `cab_type` (กระบะเท่านั้น), `engine_cc`, `drivetrain`, `seats`, `seller_type`, `district` + partial index สำหรับหน้า browse
 - `supabase/migrations/006_fix_listing_policies.sql` — ลบ policy เก่า "View listings" (สร้างใน dashboard) ที่อ่าน `profiles.role` ตรงๆ ทำให้ anon เปิด /listings ไม่ได้ — policy ที่เช็ก admin ให้ใช้ `public.is_admin()` เสมอ
 - `supabase/migrations/007_modifications.sql` — รถแต่ง: `listings.modification_level` (stock/light/moderate/heavy) + ตาราง `listing_modifications` (เดิม ↔ แต่ง, ของเดิมแถม, สถานะแจ้งขนส่ง) — Price Estimator ไม่นับรถ heavy
+- `supabase/migrations/008_model_counts.sql` — view `listing_model_counts` (จำนวนรถ active ต่อยี่ห้อ/รุ่น สำหรับ dropdown) + ปรับชื่อรุ่นเก่าให้ตรง catalog
 - `supabase/seed.sql` — รถตัวอย่าง 20 คัน (แต่งขึ้นเอง) ผูกกับ admin คนแรก, รันหลัง migration ครบ
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 

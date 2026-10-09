@@ -41,6 +41,8 @@ export default async function ListingsContent({ searchParams }: Props) {
     .eq("status", "active")
 
   if (params.brand) query = query.eq("brand", params.brand)
+  // Case-insensitive exact match so hand-typed older listings still group; % and _ stripped
+  if (params.brand && params.model) query = query.ilike("model", params.model.replace(/[%_\\]/g, "").slice(0, 100))
   if (params.province) query = query.eq("province", params.province)
   if (params.fuel_type) query = query.eq("fuel_type", params.fuel_type)
   if (params.transmission) query = query.eq("transmission", params.transmission)
