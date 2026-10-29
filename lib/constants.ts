@@ -262,3 +262,7 @@ export const PRICE_OPTIONS = [
   { value: "2000000", label: "2,000,000" },
   { value: "3000000", label: "3,000,000" },
 ]
+
+// Columns ListingCard reads — grid queries select only these instead of "*" (skips description etc.)
+export const LISTING_CARD_COLUMNS =
+  "id, status, images, brand, model, variant, year, price, mileage, province, fuel_type, body_type, modification_level"

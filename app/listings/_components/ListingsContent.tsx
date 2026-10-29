@@ -2,7 +2,7 @@ import Link from "next/link"
 import { createClient } from "@/supabase/server"
 import ListingCard from "./ListingCard"
 import { Listing } from "@/types/listing"
-import { PAGE_SIZE } from "@/lib/constants"
+import { PAGE_SIZE, LISTING_CARD_COLUMNS } from "@/lib/constants"
 
 interface Props {
   searchParams: Promise<Record<string, string>>
@@ -37,7 +37,7 @@ export default async function ListingsContent({ searchParams }: Props) {
 
   let query = supabase
     .from("listings")
-    .select("*", { count: "exact" })
+    .select(LISTING_CARD_COLUMNS, { count: "exact" })
     .eq("status", "active")
 
   if (params.brand) query = query.eq("brand", params.brand)
@@ -138,7 +138,7 @@ export default async function ListingsContent({ searchParams }: Props) {
         พบ <span className="font-semibold text-zinc-700">{new Intl.NumberFormat("th-TH").format(total)}</span> คัน
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {listings.map((listing: Listing) => (
+        {(listings as unknown as Listing[]).map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </div>

@@ -4,9 +4,10 @@ import NavbarUserMenu from "./NavbarUserMenu";
 
 export default async function Navbar() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Display only — getClaims skips the Auth server round trip that getUser makes on every page
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  const user = claims ? { id: claims.sub, email: claims.email, user_metadata: claims.user_metadata } : null;
 
   const profile = user
     ? (
