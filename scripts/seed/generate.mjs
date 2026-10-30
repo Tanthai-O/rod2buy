@@ -226,24 +226,41 @@ ON CONFLICT (id) DO UPDATE
       id_verified = EXCLUDED.id_verified, verified_at = EXCLUDED.verified_at;`
 }
 
-function listingSql(car, images) {
-  const title = titleOf(car)
-  const cols = [
-    ["brand", car.brand], ["model", car.model], ["variant", car.variant], ["year", car.year], ["price", car.price],
-    ["province", car.province], ["fuel_type", car.fuel], ["mileage", car.mileage], ["transmission", car.trans],
-    ["color", car.color[0]], ["description", car.desc], ["body_type", car.body], ["cab_type", car.cab ?? null],
-    ["engine_cc", car.cc], ["drivetrain", car.drive], ["seats", car.seats], ["seller_type", car.seller],
-    ["num_owners", car.owners ?? 1], ["accident_history", car.accident ?? "none"], ["flood_damage", car.flood ?? false],
-    ["finance_status", car.finance ?? "clear"], ["status", car.status ?? "active"], ["title", title],
-    ["images", JSON.stringify(images)],
+// One statement per chunk: VALUES list → insert missing titles, add photos to old rows without any
+const LISTING_COLS = [
+  ["brand", "text"], ["model", "text"], ["variant", "text"], ["year", "int"], ["price", "int"], ["province", "text"],
+  ["fuel_type", "text"], ["mileage", "int"], ["transmission", "text"], ["color", "text"], ["description", "text"],
+  ["body_type", "text"], ["cab_type", "text"], ["engine_cc", "int"], ["drivetrain", "text"], ["seats", "int"],
+  ["seller_type", "text"], ["num_owners", "int"], ["accident_history", "text"], ["flood_damage", "boolean"],
+  ["finance_status", "text"], ["status", "text"], ["title", "text"], ["images", "jsonb"],
+]
+
+function listingRow(car, images) {
+  const vals = [
+    car.brand, car.model, car.variant, car.year, car.price, car.province, car.fuel, car.mileage, car.trans,
+    car.color[0], car.desc, car.body, car.cab ?? null, car.cc, car.drive, car.seats, car.seller,
+    car.owners ?? 1, car.accident ?? "none", car.flood ?? false, car.finance ?? "clear", car.status ?? "active",
+    titleOf(car), JSON.stringify(images), car.owner,
   ]
-  const vals = cols.map(([, v]) => (typeof v === "boolean" ? String(v) : q(v)))
-  return `INSERT INTO public.listings (${cols.map(([k]) => k).join(", ")}, user_id)
-SELECT ${vals.join(", ")}, ${ownerSql(car.owner)}
-WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = ${q(title)});
--- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
-UPDATE public.listings SET images = ${q(JSON.stringify(images))}
-WHERE title = ${q(title)} AND jsonb_array_length(images::jsonb) = 0;`
+  return `  (${vals.map((v) => (typeof v === "boolean" ? String(v) : q(v))).join(", ")})`
+}
+
+function listingsSql(rows) {
+  const names = LISTING_COLS.map(([k]) => k)
+  return `WITH v (${names.join(", ")}, owner) AS (VALUES
+${rows.join(",\n")}
+), ins AS (
+  INSERT INTO public.listings (${names.join(", ")}, user_id)
+  SELECT ${LISTING_COLS.map(([k, t]) => `v.${k}::${t}`).join(", ")},
+    CASE WHEN v.owner = 'seller' THEN ${q(TEST_USERS.seller.id)}::uuid
+         ELSE (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1) END
+  FROM v
+  WHERE NOT EXISTS (SELECT 1 FROM public.listings l WHERE l.title = v.title)
+)
+-- รันซ้ำ / ประกาศจาก seed เก่าที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings l SET images = v.images::jsonb
+FROM v
+WHERE l.title = v.title AND jsonb_array_length(l.images::jsonb) = 0;`
 }
 
 // ── main ────────────────────────────────────────────
@@ -251,7 +268,7 @@ rmSync(IMG_DIR, { recursive: true, force: true })
 mkdirSync(IMG_DIR, { recursive: true })
 
 const titles = new Set()
-const listingBlocks = []
+const rows = []
 for (const [i, car] of CARS.entries()) {
   const title = titleOf(car)
   if (titles.has(title)) throw new Error(`duplicate title: ${title}`)
@@ -263,7 +280,7 @@ for (const [i, car] of CARS.entries()) {
     await sharp(Buffer.from(photoSvg(car, kind, mirror))).webp({ quality: 78 }).toFile(path.join(IMG_DIR, file))
     images.push(`/seed/cars/${file}`)
   }
-  listingBlocks.push(listingSql(car, images))
+  rows.push(listingRow(car, images))
 }
 
 for (const t of Object.keys(CAR_EVENTS)) if (!titles.has(t)) throw new Error(`CAR_EVENTS: unknown title ${t}`)
@@ -271,34 +288,15 @@ const eventRows = Object.entries(CAR_EVENTS).flatMap(([t, evs]) =>
   evs.map(([d, type, desc, km]) => `  (${q(t)}, ${q(d)}::date, ${q(type)}, ${q(desc)}, ${km})`)
 )
 
-const sql = `-- ============================================================
--- rod2buy — Seed Data (สร้างจาก scripts/seed/generate.mjs — อย่าแก้ไฟล์นี้ตรง ๆ)
--- ${CARS.length} คัน แต่งขึ้นเองทั้งหมด + บัญชีทดสอบ 2 คน
--- รูปรถเป็นภาพวาดประกอบ อยู่ที่ public/seed/cars/ (deploy ไปกับเว็บ)
---
--- รันใน Supabase SQL Editor หลัง migrations ครบ (001–008) — รันซ้ำได้ ไม่สร้างซ้ำ
---
--- บัญชีทดสอบ (รหัสผ่านเดียวกัน: ${TEST_PASSWORD})
---   ${TEST_USERS.seller.email}  — ผู้ขาย ยืนยันตัวตนแล้ว มีประกาศ ${CARS.filter((c) => c.owner === "seller").length} คัน (รอตรวจ 2, ขายแล้ว 1)
---   ${TEST_USERS.buyer.email}   — ผู้ซื้อ บัญชีเปล่า ไว้ทดสอบบันทึก/ติดต่อ/รีวิว
--- ⚠ ลบบัญชีทดสอบก่อนเปิดเว็บจริง (Authentication → Users)
--- ============================================================
-
-DO $$
+const ADMIN_CHECK = `DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE role = 'admin') THEN
     RAISE EXCEPTION 'ต้องมีบัญชี admin อย่างน้อย 1 คนก่อนรัน seed (UPDATE profiles SET role = ''admin'' WHERE id = ''<your-user-id>'')';
   END IF;
 END;
-$$;
+$$;`
 
--- ── บัญชีทดสอบ ───────────────────────────────────────
-${Object.values(TEST_USERS).map(userSql).join("\n")}
-
--- ── ประกาศ ───────────────────────────────────────────
-${listingBlocks.join("\n\n")}
-
--- ── ตัวอย่างรถแต่ง: Civic RS (migration 007) ──────────
+const EXTRAS = `-- ── ตัวอย่างรถแต่ง: Civic RS (migration 007) ──────────
 WITH civic AS (
   UPDATE public.listings
   SET modification_level = 'moderate'
@@ -336,7 +334,44 @@ JOIN LATERAL (
 WHERE NOT EXISTS (
   SELECT 1 FROM public.car_events c
   WHERE c.listing_id = l.id AND c.event_date = e.event_date AND c.event_type = e.event_type
-);
-`
-writeFileSync(path.join(ROOT, "supabase/seed.sql"), sql)
-console.log(`${CARS.length} cars, ${CARS.length * 3} images → public/seed/cars, supabase/seed.sql`)
+);`
+
+// Small parts so the SQL Editor on a phone can take each paste
+const CHUNK = 16
+const listingParts = []
+for (let i = 0; i < rows.length; i += CHUNK) listingParts.push(rows.slice(i, i + CHUNK))
+const parts = [
+  ["บัญชีทดสอบ 2 คน", `${ADMIN_CHECK}\n${Object.values(TEST_USERS).map(userSql).join("\n")}`],
+  ...listingParts.map((r, i) => [`ประกาศ ชุดที่ ${i + 1}/${listingParts.length} (${r.length} คัน)`, `${ADMIN_CHECK}\n\n${listingsSql(r)}`]),
+  ["รถแต่ง + ประวัติรถ", EXTRAS],
+]
+
+const HEADER = `-- ============================================================
+-- rod2buy — Seed Data (สร้างจาก scripts/seed/generate.mjs — อย่าแก้ไฟล์นี้ตรง ๆ)
+-- ${CARS.length} คัน แต่งขึ้นเองทั้งหมด + บัญชีทดสอบ 2 คน
+-- รูปรถเป็นภาพวาดประกอบ อยู่ที่ public/seed/cars/ (deploy ไปกับเว็บ)
+--
+-- รันใน Supabase SQL Editor หลัง migrations ครบ (001–008) — รันซ้ำได้ ไม่สร้างซ้ำ
+-- ไฟล์ใหญ่สำหรับมือถือ? ใช้ supabase/seed/ แทน (แบ่งเป็นไฟล์เล็ก รันตามลำดับเลขไฟล์)
+--
+-- บัญชีทดสอบ (รหัสผ่านเดียวกัน: ${TEST_PASSWORD})
+--   ${TEST_USERS.seller.email}  — ผู้ขาย ยืนยันตัวตนแล้ว มีประกาศ ${CARS.filter((c) => c.owner === "seller").length} คัน (รอตรวจ 2, ขายแล้ว 1)
+--   ${TEST_USERS.buyer.email}   — ผู้ซื้อ บัญชีเปล่า ไว้ทดสอบบันทึก/ติดต่อ/รีวิว
+-- ⚠ ลบบัญชีทดสอบก่อนเปิดเว็บจริง (Authentication → Users)
+-- ============================================================`
+
+const PART_DIR = path.join(ROOT, "supabase/seed")
+rmSync(PART_DIR, { recursive: true, force: true })
+mkdirSync(PART_DIR, { recursive: true })
+for (const [i, [label, body]] of parts.entries()) {
+  const file = `${i + 1}.sql`
+  writeFileSync(
+    path.join(PART_DIR, file),
+    `-- rod2buy seed ${i + 1}/${parts.length} — ${label}\n-- รันตามลำดับ 1 → ${parts.length} (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs\n\n${body}\n`
+  )
+}
+writeFileSync(
+  path.join(ROOT, "supabase/seed.sql"),
+  `${HEADER}\n\n${parts.map(([label, body]) => `-- ── ${label} ──\n${body}`).join("\n\n")}\n`
+)
+console.log(`${CARS.length} cars, ${CARS.length * 3} images → public/seed/cars, supabase/seed.sql, supabase/seed/1..${parts.length}.sql`)

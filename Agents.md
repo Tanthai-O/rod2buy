@@ -46,7 +46,7 @@
 - `supabase/migrations/006_fix_listing_policies.sql` — ลบ policy เก่า "View listings" (สร้างใน dashboard) ที่อ่าน `profiles.role` ตรงๆ ทำให้ anon เปิด /listings ไม่ได้ — policy ที่เช็ก admin ให้ใช้ `public.is_admin()` เสมอ
 - `supabase/migrations/007_modifications.sql` — รถแต่ง: `listings.modification_level` (stock/light/moderate/heavy) + ตาราง `listing_modifications` (เดิม ↔ แต่ง, ของเดิมแถม, สถานะแจ้งขนส่ง) — Price Estimator ไม่นับรถ heavy
 - `supabase/migrations/008_model_counts.sql` — view `listing_model_counts` (จำนวนรถ active ต่อยี่ห้อ/รุ่น สำหรับ dropdown) + ปรับชื่อรุ่นเก่าให้ตรง catalog
-- `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
+- `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ (มือถือ: รัน `supabase/seed/1.sql` → `5.sql` ทีละไฟล์แทน) — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
 ## Storage Buckets
