@@ -46,12 +46,18 @@
 - `supabase/migrations/006_fix_listing_policies.sql` — ลบ policy เก่า "View listings" (สร้างใน dashboard) ที่อ่าน `profiles.role` ตรงๆ ทำให้ anon เปิด /listings ไม่ได้ — policy ที่เช็ก admin ให้ใช้ `public.is_admin()` เสมอ
 - `supabase/migrations/007_modifications.sql` — รถแต่ง: `listings.modification_level` (stock/light/moderate/heavy) + ตาราง `listing_modifications` (เดิม ↔ แต่ง, ของเดิมแถม, สถานะแจ้งขนส่ง) — Price Estimator ไม่นับรถ heavy
 - `supabase/migrations/008_model_counts.sql` — view `listing_model_counts` (จำนวนรถ active ต่อยี่ห้อ/รุ่น สำหรับ dropdown) + ปรับชื่อรุ่นเก่าให้ตรง catalog
-- `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
+- `supabase/migrations/009_shop_profiles.sql` — หน้าร้าน: `profiles.username` (ลิงก์ `/@ชื่อ`), `account_type` (private/dealer), `bio`, `cover_url`, `shop_address` + `business_hours` (เต็นท์เท่านั้น — constraint บังคับ), `business_verified` (admin ตั้งเท่านั้น), RPC `reveal_seller_contact()`; ย้าย view `price_estimates` / `seller_scores` ไป schema `private` (แก้ Security Advisor "Security Definer View") — view ใน public เป็น security_invoker ครอบอีกชั้น ห้ามเปลี่ยนเป็น invoker ตรง ๆ เพราะต้องนับรถที่ขายแล้วซึ่ง RLS ซ่อนจากผู้ชม
+- `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ (มือถือ: รัน `supabase/seed/1.sql` → `5.sql` ทีละไฟล์แทน) — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
 ## Storage Buckets
 - `car-images` (public) — รูปรถ path `{user_id}/{listing_id}/...`
 - `verification-docs` (private) — บัตรประชาชน `{user_id}/id_card_*` และสมุดทะเบียน `{user_id}/reg_book/*`
+
+## หน้าร้าน + การ์ดแชร์
+- `/@username` → rewrite ไป `/sellers/[id]` (next.config.ts) — `[id]` รับได้ทั้ง uuid และ username, ลิงก์ uuid เก่า redirect ไป `/@ชื่อ`; สร้างลิงก์ด้วย `sellerPath()` จาก `lib/seller.ts`
+- ตั้งค่าหน้าร้านที่ dashboard (`ShopSettingsCard`) — รูปปกอัปไป `car-images/{uid}/profile/`
+- การ์ดตอนแชร์ (OG image): `app/listings/[id]/opengraph-image.tsx`, `app/sellers/[id]/opengraph-image.tsx` + `lib/og.ts` — font ไทยอยู่ที่ `assets/fonts/` (Noto Sans Thai, OFL), ไม่มีสัญลักษณ์ ฿ ใน font ใช้คำว่า "บาท"
 
 ## Supabase Client Files
 - `supabase/client.ts` — ใช้ใน Client Components

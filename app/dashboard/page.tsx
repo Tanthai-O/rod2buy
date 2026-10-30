@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
 import type { Listing } from "@/types/listing"
+import ShopSettingsCard, { type ShopSettings } from "./_components/ShopSettingsCard"
 import ProfileCard from "./_components/ProfileCard"
 import SellerScoreCard from "./_components/SellerScoreCard"
 import DashboardTabs from "./_components/DashboardTabs"
@@ -51,7 +52,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     await Promise.all([
       supabase
         .from("profiles")
-        .select("id, display_name, avatar_url, id_verified")
+        .select("id, display_name, avatar_url, id_verified, username, account_type, bio, cover_url, shop_address, business_hours, business_verified")
         .eq("id", user.id)
         .maybeSingle(),
       // phone / LINE aren't directly selectable (migration 003) — read via RPC
@@ -93,6 +94,8 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           />
           <SellerScoreCard score={score} />
         </div>
+
+        {profileResult.data && <ShopSettingsCard shop={profileResult.data as ShopSettings} />}
 
         <DashboardTabs
           listings={listings}
