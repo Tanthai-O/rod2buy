@@ -191,12 +191,6 @@ function photoSvg(car, kind, mirror) {
 // ── SQL ─────────────────────────────────────────────
 const q = (v) => (v === null || v === undefined ? "NULL" : typeof v === "number" ? String(v) : `'${String(v).replace(/'/g, "''")}'`)
 
-function ownerSql(owner) {
-  return owner === "seller"
-    ? q(TEST_USERS.seller.id)
-    : "(SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)"
-}
-
 function userSql(u) {
   const meta = JSON.stringify({ full_name: u.name })
   return `
@@ -336,6 +330,16 @@ WHERE NOT EXISTS (
   WHERE c.listing_id = l.id AND c.event_date = e.event_date AND c.event_type = e.event_type
 );`
 
+// Test seller as a verified shop: rod2buy.com/@somchaicar (columns from migration 009)
+const SHOP = `UPDATE public.profiles SET
+  username = 'somchaicar',
+  account_type = 'dealer',
+  bio = 'เต็นท์รถมือสองคุณภาพ (บัญชีทดสอบ)\nรับประกันเครื่องเกียร์ 1 ปี · มีไฟแนนซ์ ดาวน์น้อย · รับเทิร์นรถทุกยี่ห้อ',
+  shop_address = 'ถนนพหลโยธิน อำเภอเมือง จังหวัดปทุมธานี (ที่อยู่สมมติ)',
+  business_hours = 'ทุกวัน 08:30–18:30',
+  business_verified = true
+WHERE id = ${q(TEST_USERS.seller.id)};`
+
 // Small parts so the SQL Editor on a phone can take each paste
 const CHUNK = 16
 const listingParts = []
@@ -344,6 +348,7 @@ const parts = [
   ["บัญชีทดสอบ 2 คน", `${ADMIN_CHECK}\n${Object.values(TEST_USERS).map(userSql).join("\n")}`],
   ...listingParts.map((r, i) => [`ประกาศ ชุดที่ ${i + 1}/${listingParts.length} (${r.length} คัน)`, `${ADMIN_CHECK}\n\n${listingsSql(r)}`]),
   ["รถแต่ง + ประวัติรถ", EXTRAS],
+  ["หน้าร้านของผู้ขายทดสอบ (ต้องรัน migration 009 ก่อน)", SHOP],
 ]
 
 const HEADER = `-- ============================================================
@@ -351,7 +356,7 @@ const HEADER = `-- ============================================================
 -- ${CARS.length} คัน แต่งขึ้นเองทั้งหมด + บัญชีทดสอบ 2 คน
 -- รูปรถเป็นภาพวาดประกอบ อยู่ที่ public/seed/cars/ (deploy ไปกับเว็บ)
 --
--- รันใน Supabase SQL Editor หลัง migrations ครบ (001–008) — รันซ้ำได้ ไม่สร้างซ้ำ
+-- รันใน Supabase SQL Editor หลัง migrations ครบ (001–009) — รันซ้ำได้ ไม่สร้างซ้ำ
 -- ไฟล์ใหญ่สำหรับมือถือ? ใช้ supabase/seed/ แทน (แบ่งเป็นไฟล์เล็ก รันตามลำดับเลขไฟล์)
 --
 -- บัญชีทดสอบ (รหัสผ่านเดียวกัน: ${TEST_PASSWORD})

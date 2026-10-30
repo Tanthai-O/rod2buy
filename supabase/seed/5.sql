@@ -1,5 +1,5 @@
--- rod2buy seed 5/5 — รถแต่ง + ประวัติรถ
--- รันตามลำดับ 1 → 5 (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs
+-- rod2buy seed 5/6 — รถแต่ง + ประวัติรถ
+-- รันตามลำดับ 1 → 6 (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs
 
 -- ── ตัวอย่างรถแต่ง: Civic RS (migration 007) ──────────
 WITH civic AS (

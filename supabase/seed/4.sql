@@ -1,5 +1,5 @@
--- rod2buy seed 4/5 — ประกาศ ชุดที่ 3/3 (15 คัน)
--- รันตามลำดับ 1 → 5 (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs
+-- rod2buy seed 4/6 — ประกาศ ชุดที่ 3/3 (15 คัน)
+-- รันตามลำดับ 1 → 6 (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs
 
 DO $$
 BEGIN

@@ -20,6 +20,7 @@ import ShareButtons from "./_components/ShareButtons"
 import SafetyTips from "./_components/SafetyTips"
 import ListingCard from "../_components/ListingCard"
 import { SITE_URL } from "@/lib/site"
+import { sellerPath } from "@/lib/seller"
 import Avatar from "@/app/components/Avatar"
 
 interface PageProps {
@@ -29,11 +30,11 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
   const supabase = await createClient()
-  const { data } = await supabase.from("listings").select("brand,model,year,price,province,images").eq("id", id).single()
+  const { data } = await supabase.from("listings").select("brand,model,year,price,province").eq("id", id).single()
   if (!data) return { title: "ไม่พบรถ | rod2buy" }
   const title = `${data.brand} ${data.model} ${data.year} | rod2buy`
   const description = `${data.brand} ${data.model} ปี ${data.year} ราคา ฿${new Intl.NumberFormat("th-TH").format(data.price)} จาก${data.province}`
-  const image = (data.images as string[] | null)?.[0]
+  // Share image: opengraph-image.tsx next to this page (photo + price card)
   return {
     title,
     description,
@@ -44,8 +45,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: `${SITE_URL}/listings/${id}`,
       type: "website",
       locale: "th_TH",
-      ...(image ? { images: [{ url: image }] } : {}),
     },
+    twitter: { card: "summary_large_image", title, description },
   }
 }
 
@@ -91,7 +92,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     supabase.from("car_events").select("*").eq("listing_id", id).order("event_date", { ascending: true }),
     supabase.from("price_estimates").select("*").eq("brand", listing.brand).eq("model", listing.model).eq("year", listing.year).maybeSingle(),
     listing.user_id
-      ? supabase.from("profiles").select("display_name, avatar_url, id_verified").eq("id", listing.user_id).maybeSingle()
+      ? supabase.from("profiles").select("display_name, avatar_url, id_verified, username").eq("id", listing.user_id).maybeSingle()
       : Promise.resolve({ data: null }),
     listing.user_id
       ? supabase.from("seller_scores").select("*").eq("user_id", listing.user_id).maybeSingle()
@@ -126,7 +127,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     avg_price: number; min_price: number; max_price: number; sample_count: number
   } | null
   const sellerProfile = profileRes.data as {
-    display_name?: string; avatar_url?: string | null; id_verified?: boolean
+    display_name?: string; avatar_url?: string | null; id_verified?: boolean; username?: string | null
   } | null
   const sellerScore = scoreRes.data as {
     avg_rating: number; review_count: number; total_listings: number; sold_count: number
@@ -405,7 +406,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
                 {listing.user_id && (
                   <Link
-                    href={`/sellers/${listing.user_id}`}
+                    href={sellerPath({ id: listing.user_id, username: sellerProfile?.username })}
                     className="block text-center text-xs font-medium text-amber-600 hover:text-amber-700 mb-3"
                   >
                     ดูโปรไฟล์และรถคันอื่นของผู้ขาย →

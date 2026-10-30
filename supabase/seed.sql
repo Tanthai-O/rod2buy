@@ -3,7 +3,7 @@
 -- 47 คัน แต่งขึ้นเองทั้งหมด + บัญชีทดสอบ 2 คน
 -- รูปรถเป็นภาพวาดประกอบ อยู่ที่ public/seed/cars/ (deploy ไปกับเว็บ)
 --
--- รันใน Supabase SQL Editor หลัง migrations ครบ (001–008) — รันซ้ำได้ ไม่สร้างซ้ำ
+-- รันใน Supabase SQL Editor หลัง migrations ครบ (001–009) — รันซ้ำได้ ไม่สร้างซ้ำ
 -- ไฟล์ใหญ่สำหรับมือถือ? ใช้ supabase/seed/ แทน (แบ่งเป็นไฟล์เล็ก รันตามลำดับเลขไฟล์)
 --
 -- บัญชีทดสอบ (รหัสผ่านเดียวกัน: rod2buy-test-1234)
@@ -236,3 +236,14 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.car_events c
   WHERE c.listing_id = l.id AND c.event_date = e.event_date AND c.event_type = e.event_type
 );
+
+-- ── หน้าร้านของผู้ขายทดสอบ (ต้องรัน migration 009 ก่อน) ──
+UPDATE public.profiles SET
+  username = 'somchaicar',
+  account_type = 'dealer',
+  bio = 'เต็นท์รถมือสองคุณภาพ (บัญชีทดสอบ)
+รับประกันเครื่องเกียร์ 1 ปี · มีไฟแนนซ์ ดาวน์น้อย · รับเทิร์นรถทุกยี่ห้อ',
+  shop_address = 'ถนนพหลโยธิน อำเภอเมือง จังหวัดปทุมธานี (ที่อยู่สมมติ)',
+  business_hours = 'ทุกวัน 08:30–18:30',
+  business_verified = true
+WHERE id = '5eed0000-0000-4000-8000-000000000001';

@@ -1,5 +1,5 @@
--- rod2buy seed 1/5 — บัญชีทดสอบ 2 คน
--- รันตามลำดับ 1 → 5 (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs
+-- rod2buy seed 1/6 — บัญชีทดสอบ 2 คน
+-- รันตามลำดับ 1 → 6 (รันซ้ำได้) · สร้างจาก scripts/seed/generate.mjs
 
 DO $$
 BEGIN
