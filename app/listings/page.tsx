@@ -15,13 +15,18 @@ interface PageProps {
   searchParams: Promise<Record<string, string>>
 }
 
-export default async function ListingsPage({ searchParams }: PageProps) {
+// Fetched inside Suspense so the page shell and listings stream without waiting on it
+async function FilterBarWithCounts() {
   // Counts for the brand / model dropdowns (view from migration 008)
   const supabase = await createClient()
   const { data: modelCounts } = await supabase
     .from("listing_model_counts")
     .select("brand, model, listing_count")
 
+  return <FilterBar modelCounts={modelCounts ?? []} />
+}
+
+export default function ListingsPage({ searchParams }: PageProps) {
   return (
     <main className="min-h-screen bg-zinc-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -34,7 +39,7 @@ export default async function ListingsPage({ searchParams }: PageProps) {
 
         {/* FilterBar ต้อง wrap ใน Suspense เพราะใช้ useSearchParams */}
         <Suspense>
-          <FilterBar modelCounts={modelCounts ?? []} />
+          <FilterBarWithCounts />
         </Suspense>
 
         <Suspense fallback={<ListingsSkeleton />}>
