@@ -1,7 +1,14 @@
 -- ============================================================
--- rod2buy — Seed Data (ข้อมูลตัวอย่าง 20 คัน — แต่งขึ้นเอง ไม่ได้คัดลอกจากเว็บอื่น)
--- รันหลัง migrations ครบ (001–007)
--- ประกาศทั้งหมดผูกกับบัญชี admin คนแรก (ต้องมี admin อย่างน้อย 1 คน)
+-- rod2buy — Seed Data (สร้างจาก scripts/seed/generate.mjs — อย่าแก้ไฟล์นี้ตรง ๆ)
+-- 47 คัน แต่งขึ้นเองทั้งหมด + บัญชีทดสอบ 2 คน
+-- รูปรถเป็นภาพวาดประกอบ อยู่ที่ public/seed/cars/ (deploy ไปกับเว็บ)
+--
+-- รันใน Supabase SQL Editor หลัง migrations ครบ (001–008) — รันซ้ำได้ ไม่สร้างซ้ำ
+--
+-- บัญชีทดสอบ (รหัสผ่านเดียวกัน: rod2buy-test-1234)
+--   seller@rod2buy.test  — ผู้ขาย ยืนยันตัวตนแล้ว มีประกาศ 27 คัน (รอตรวจ 2, ขายแล้ว 1)
+--   buyer@rod2buy.test   — ผู้ซื้อ บัญชีเปล่า ไว้ทดสอบบันทึก/ติดต่อ/รีวิว
+-- ⚠ ลบบัญชีทดสอบก่อนเปิดเว็บจริง (Authentication → Users)
 -- ============================================================
 
 DO $$
@@ -12,170 +19,387 @@ BEGIN
 END;
 $$;
 
-INSERT INTO public.listings
-  (brand, model, year, price, province, fuel_type, mileage, images, status, transmission, color, description,
-   variant, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, title, user_id)
-VALUES
-  (
-    'Toyota', 'Camry', 2022, 1199000,
-    'กรุงเทพมหานคร', 'hybrid', 28000, '[]', 'active', 'auto',
-    'สีเทาดาวเคราะห์',
-    'Camry Hybrid 2.5V ปี 22 มือเดียว ออกห้าง ประวัติศูนย์ครบ เอกสารพร้อม',
-    '2.5 HEV Premium', 'sedan', NULL, 2487, '2wd', 5, 'private',
-    'Toyota Camry 2.5 HEV Premium 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Honda', 'Civic', 2021, 749000,
-    'กรุงเทพมหานคร', 'petrol', 42000, '[]', 'active', 'auto',
-    'สีขาวแพลทินัม',
-    'Civic RS 1.5 Turbo ปี 21 แต่งสวย ช่วงล่างดี ใช้งานดูแลดี',
-    '1.5 Turbo RS', 'sedan', NULL, 1498, '2wd', 5, 'private',
-    'Honda Civic 1.5 Turbo RS 2021', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Isuzu', 'D-Max', 2022, 645000,
-    'ขอนแก่น', 'diesel', 55000, '[]', 'active', 'manual',
-    'สีขาว',
-    'D-Max Spacecab Hi-Lander ปี 22 ดีเซล 1.9 ใช้งานในจังหวัด สภาพดี',
-    'Spacecab Hi-Lander 1.9', 'pickup', 'extended', 1898, '2wd', 2, 'private',
-    'Isuzu D-Max Spacecab Hi-Lander 1.9 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Toyota', 'Fortuner', 2021, 1099000,
-    'เชียงใหม่', 'diesel', 38000, '[]', 'active', 'auto',
-    'สีดำ',
-    'Fortuner 2.8 Legender 4WD ปี 21 ออฟชันเต็ม ราคาต่อรองได้',
-    '2.8 Legender 4WD', 'ppv', NULL, 2755, '4wd', 7, 'dealer',
-    'Toyota Fortuner 2.8 Legender 4WD 2021', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Honda', 'HR-V', 2022, 819000,
-    'ชลบุรี', 'petrol', 22000, '[]', 'active', 'auto',
-    'สีแดงเลือดนก',
-    'HR-V e:HEV RS ปี 22 ไม่เคยชน เช็คศูนย์ตลอด พร้อมใช้',
-    'e:HEV RS', 'suv', NULL, 1498, '2wd', 5, 'private',
-    'Honda HR-V e:HEV RS 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Toyota', 'Yaris Ativ', 2023, 469000,
-    'นนทบุรี', 'petrol', 15000, '[]', 'active', 'auto',
-    'สีขาวมุก',
-    'Yaris Ativ Sport ปี 23 ยังมีประกันศูนย์ วิ่งน้อย ประหยัดน้ำมัน',
-    '1.2 Premium', 'sedan', NULL, 1197, '2wd', 5, 'private',
-    'Toyota Yaris Ativ 1.2 Premium 2023', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Mazda', 'CX-5', 2021, 979000,
-    'กรุงเทพมหานคร', 'petrol', 48000, '[]', 'active', 'auto',
-    'สีน้ำเงิน Soul Red',
-    'CX-5 2.0 SP ปี 21 ออฟชันเยอะ หนังแท้ หลังคาแก้ว สภาพสวย',
-    '2.0 SP', 'suv', NULL, 1998, '2wd', 5, 'private',
-    'Mazda CX-5 2.0 SP 2021', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Ford', 'Ranger', 2022, 679000,
-    'นครราชสีมา', 'diesel', 31000, '[]', 'active', 'auto',
-    'สีเทา',
-    'Ranger Wildtrak 2.0T ปี 22 4x4 อุปกรณ์ครบ ราคาดี',
-    'Double Cab Wildtrak 2.0', 'pickup', 'double', 1996, '4wd', 5, 'dealer',
-    'Ford Ranger Double Cab Wildtrak 2.0 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'BYD', 'Atto 3', 2023, 1099000,
-    'กรุงเทพมหานคร', 'electric', 12000, '[]', 'active', 'auto',
-    'สีขาว',
-    'BYD Atto 3 Extended Range ปี 23 วิ่ง 420 กม./ชาร์จ แบตเตอรี่ดี ไม่มีค่าน้ำมัน',
-    'Extended Range', 'suv', NULL, NULL, '2wd', 5, 'private',
-    'BYD Atto 3 Extended Range 2023', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Toyota', 'Alphard', 2022, 3499000,
-    'กรุงเทพมหานคร', 'hybrid', 18000, '[]', 'active', 'auto',
-    'สีดำ',
-    'Alphard Hybrid SC ปี 22 เบาะ Executive Lounge แทบไม่ได้ใช้ ราคาต่อรอง',
-    '2.5 SC Package', 'van', NULL, 2494, '2wd', 7, 'dealer',
-    'Toyota Alphard 2.5 SC Package 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Honda', 'Jazz', 2020, 469000,
-    'สมุทรปราการ', 'petrol', 65000, '[]', 'active', 'auto',
-    'สีเทา',
-    'Jazz 1.5 V+ ปี 20 เครื่องดี ช่วงล่างแน่น พร้อมใช้ ราคาต่อรองได้',
-    '1.5 RS', 'hatchback', NULL, 1497, '2wd', 5, 'private',
-    'Honda Jazz 1.5 RS 2020', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Mitsubishi', 'Pajero Sport', 2022, 1249000,
-    'ภูเก็ต', 'diesel', 35000, '[]', 'active', 'auto',
-    'สีขาวไข่มุก',
-    'Pajero Sport GT Premium ปี 22 4WD ออฟชันเต็ม ประวัติดีมาก',
-    '2.4 GT Premium', 'ppv', NULL, 2442, '2wd', 7, 'private',
-    'Mitsubishi Pajero Sport 2.4 GT Premium 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'BMW', '320d', 2021, 1799000,
-    'กรุงเทพมหานคร', 'diesel', 44000, '[]', 'active', 'auto',
-    'สีดำ Saphire',
-    'BMW 320d M Sport ปี 21 ดีเซล เครื่องดี ประหยัดน้ำมัน อุปกรณ์ครบ',
-    'M Sport', 'sedan', NULL, 1995, '2wd', 5, 'dealer',
-    'BMW 320d M Sport 2021', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Toyota', 'Corolla Cross', 2022, 869000,
-    'อุดรธานี', 'hybrid', 29000, '[]', 'active', 'auto',
-    'สีขาว',
-    'Corolla Cross Hybrid HV ปี 22 วิ่งในเมือง ประหยัดน้ำมันมาก สภาพสวย',
-    '1.8 HEV Premium', 'suv', NULL, 1798, '2wd', 5, 'private',
-    'Toyota Corolla Cross 1.8 HEV Premium 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Honda', 'CR-V', 2022, 1349000,
-    'ปทุมธานี', 'petrol', 25000, '[]', 'active', 'auto',
-    'สีขาว',
-    'CR-V Turbo EL ปี 22 ออฟชันเต็ม 7 ที่นั่ง หนังแท้ หลังคาแก้ว',
-    '2.4 ES 4WD', 'suv', NULL, 2356, 'awd', 7, 'private',
-    'Honda CR-V 2.4 ES 4WD 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Nissan', 'Navara', 2021, 599000,
-    'สุราษฎร์ธานี', 'diesel', 58000, '[]', 'active', 'manual',
-    'สีเทา',
-    'Navara King Cab Calibre EL ปี 21 ดีเซล 2.5 ทำงานไร่ สภาพดี',
-    'Double Cab Calibre V', 'pickup', 'double', 2298, '2wd', 5, 'private',
-    'Nissan Navara Double Cab Calibre V 2021', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'MG', 'ZS EV', 2023, 699000,
-    'กรุงเทพมหานคร', 'electric', 8000, '[]', 'active', 'auto',
-    'สีแดง',
-    'MG ZS EV Long Range ปี 23 วิ่ง 440 กม./ชาร์จ ยังมีประกัน 3 ปี',
-    'Long Range', 'suv', NULL, NULL, '2wd', 5, 'private',
-    'MG ZS EV Long Range 2023', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Toyota', 'Hilux Revo', 2022, 549000,
-    'เชียงราย', 'diesel', 42000, '[]', 'active', 'manual',
-    'สีขาว',
-    'Hilux Revo Smart Cab Entry ปี 22 ดีเซล 2.4 ใช้งานในจังหวัด สภาพดี',
-    'Smart Cab Entry 2.4', 'pickup', 'extended', 2393, '2wd', 2, 'private',
-    'Toyota Hilux Revo Smart Cab Entry 2.4 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Honda', 'City', 2022, 639000,
-    'กรุงเทพมหานคร', 'hybrid', 19000, '[]', 'active', 'auto',
-    'สีเทา Urban',
-    'City e:HEV RS ปี 22 ไฮบริด วิ่งน้อย ประวัติศูนย์ครบ พร้อมโอน',
-    'e:HEV RS', 'sedan', NULL, 1498, '2wd', 5, 'private',
-    'Honda City e:HEV RS 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  ),
-  (
-    'Mazda', '2', 2022, 489000,
-    'ระยอง', 'petrol', 33000, '[]', 'active', 'auto',
-    'สีแดง Soul Red',
-    'Mazda2 1.3 SP ปี 22 เบนซิน สภาพสวยมาก ดูแลดี ราคาต่อรองได้',
-    '1.3 SP', 'hatchback', NULL, 1298, '2wd', 5, 'private',
-    'Mazda 2 1.3 SP 2022', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
-  );
+-- ── บัญชีทดสอบ ───────────────────────────────────────
+
+-- seller@rod2buy.test
+INSERT INTO auth.users
+  (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+   confirmation_token, recovery_token, email_change, email_change_token_new,
+   email_change_token_current, phone_change, phone_change_token, reauthentication_token)
+SELECT '00000000-0000-0000-0000-000000000000', '5eed0000-0000-4000-8000-000000000001', 'authenticated', 'authenticated', 'seller@rod2buy.test',
+  extensions.crypt('rod2buy-test-1234', extensions.gen_salt('bf')), now(),
+  '{"provider":"email","providers":["email"]}', '{"full_name":"สมชาย ขายรถ (ทดสอบ)"}', now(), now(),
+  '', '', '', '', '', '', '', ''
+WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE id = '5eed0000-0000-4000-8000-000000000001' OR email = 'seller@rod2buy.test');
+
+INSERT INTO auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
+SELECT gen_random_uuid(), '5eed0000-0000-4000-8000-000000000001', '5eed0000-0000-4000-8000-000000000001', 'email',
+  jsonb_build_object('sub', '5eed0000-0000-4000-8000-000000000001', 'email', 'seller@rod2buy.test', 'email_verified', true), now(), now(), now()
+WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = '5eed0000-0000-4000-8000-000000000001')
+  AND NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = '5eed0000-0000-4000-8000-000000000001' AND provider = 'email');
+
+INSERT INTO public.profiles (id, display_name, phone, line_id, id_verified, verified_at)
+SELECT '5eed0000-0000-4000-8000-000000000001', 'สมชาย ขายรถ (ทดสอบ)', '0810000001', 'somchai.test', true, now()
+WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = '5eed0000-0000-4000-8000-000000000001')
+ON CONFLICT (id) DO UPDATE
+  SET display_name = EXCLUDED.display_name, phone = EXCLUDED.phone, line_id = EXCLUDED.line_id,
+      id_verified = EXCLUDED.id_verified, verified_at = EXCLUDED.verified_at;
+
+-- buyer@rod2buy.test
+INSERT INTO auth.users
+  (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+   raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+   confirmation_token, recovery_token, email_change, email_change_token_new,
+   email_change_token_current, phone_change, phone_change_token, reauthentication_token)
+SELECT '00000000-0000-0000-0000-000000000000', '5eed0000-0000-4000-8000-000000000002', 'authenticated', 'authenticated', 'buyer@rod2buy.test',
+  extensions.crypt('rod2buy-test-1234', extensions.gen_salt('bf')), now(),
+  '{"provider":"email","providers":["email"]}', '{"full_name":"สมหญิง หารถ (ทดสอบ)"}', now(), now(),
+  '', '', '', '', '', '', '', ''
+WHERE NOT EXISTS (SELECT 1 FROM auth.users WHERE id = '5eed0000-0000-4000-8000-000000000002' OR email = 'buyer@rod2buy.test');
+
+INSERT INTO auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
+SELECT gen_random_uuid(), '5eed0000-0000-4000-8000-000000000002', '5eed0000-0000-4000-8000-000000000002', 'email',
+  jsonb_build_object('sub', '5eed0000-0000-4000-8000-000000000002', 'email', 'buyer@rod2buy.test', 'email_verified', true), now(), now(), now()
+WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = '5eed0000-0000-4000-8000-000000000002')
+  AND NOT EXISTS (SELECT 1 FROM auth.identities WHERE user_id = '5eed0000-0000-4000-8000-000000000002' AND provider = 'email');
+
+INSERT INTO public.profiles (id, display_name, phone, line_id, id_verified, verified_at)
+SELECT '5eed0000-0000-4000-8000-000000000002', 'สมหญิง หารถ (ทดสอบ)', '0810000002', NULL, false, NULL
+WHERE EXISTS (SELECT 1 FROM auth.users WHERE id = '5eed0000-0000-4000-8000-000000000002')
+ON CONFLICT (id) DO UPDATE
+  SET display_name = EXCLUDED.display_name, phone = EXCLUDED.phone, line_id = EXCLUDED.line_id,
+      id_verified = EXCLUDED.id_verified, verified_at = EXCLUDED.verified_at;
+
+-- ── ประกาศ ───────────────────────────────────────────
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Camry', '2.5 HEV Premium', 2022, 1199000, 'กรุงเทพมหานคร', 'hybrid', 28000, 'auto', 'สีเทาดาวเคราะห์', 'Camry Hybrid 2.5V ปี 22 มือเดียว ออกห้าง ประวัติศูนย์ครบ เอกสารพร้อม', 'sedan', NULL, 2487, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Toyota Camry 2.5 HEV Premium 2022', '["/seed/cars/01-1.webp","/seed/cars/01-2.webp","/seed/cars/01-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Camry 2.5 HEV Premium 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/01-1.webp","/seed/cars/01-2.webp","/seed/cars/01-3.webp"]'
+WHERE title = 'Toyota Camry 2.5 HEV Premium 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'Civic', '1.5 Turbo RS', 2021, 749000, 'กรุงเทพมหานคร', 'petrol', 42000, 'auto', 'สีขาวแพลทินัม', 'Civic RS 1.5 Turbo ปี 21 แต่งสวย ช่วงล่างดี ใช้งานดูแลดี', 'sedan', NULL, 1498, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Honda Civic 1.5 Turbo RS 2021', '["/seed/cars/02-1.webp","/seed/cars/02-2.webp","/seed/cars/02-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda Civic 1.5 Turbo RS 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/02-1.webp","/seed/cars/02-2.webp","/seed/cars/02-3.webp"]'
+WHERE title = 'Honda Civic 1.5 Turbo RS 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Isuzu', 'D-Max', 'Spacecab Hi-Lander 1.9', 2022, 645000, 'ขอนแก่น', 'diesel', 55000, 'manual', 'สีขาว', 'D-Max Spacecab Hi-Lander ปี 22 ดีเซล 1.9 ใช้งานในจังหวัด สภาพดี', 'pickup', 'extended', 1898, '2wd', 2, 'private', 1, 'none', false, 'clear', 'active', 'Isuzu D-Max Spacecab Hi-Lander 1.9 2022', '["/seed/cars/03-1.webp","/seed/cars/03-2.webp","/seed/cars/03-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Isuzu D-Max Spacecab Hi-Lander 1.9 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/03-1.webp","/seed/cars/03-2.webp","/seed/cars/03-3.webp"]'
+WHERE title = 'Isuzu D-Max Spacecab Hi-Lander 1.9 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Fortuner', '2.8 Legender 4WD', 2021, 1099000, 'เชียงใหม่', 'diesel', 38000, 'auto', 'สีดำ', 'Fortuner 2.8 Legender 4WD ปี 21 ออฟชันเต็ม ราคาต่อรองได้', 'ppv', NULL, 2755, '4wd', 7, 'dealer', 1, 'none', false, 'clear', 'active', 'Toyota Fortuner 2.8 Legender 4WD 2021', '["/seed/cars/04-1.webp","/seed/cars/04-2.webp","/seed/cars/04-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Fortuner 2.8 Legender 4WD 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/04-1.webp","/seed/cars/04-2.webp","/seed/cars/04-3.webp"]'
+WHERE title = 'Toyota Fortuner 2.8 Legender 4WD 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'HR-V', 'e:HEV RS', 2022, 819000, 'ชลบุรี', 'petrol', 22000, 'auto', 'สีแดงเลือดนก', 'HR-V e:HEV RS ปี 22 ไม่เคยชน เช็คศูนย์ตลอด พร้อมใช้', 'suv', NULL, 1498, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Honda HR-V e:HEV RS 2022', '["/seed/cars/05-1.webp","/seed/cars/05-2.webp","/seed/cars/05-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda HR-V e:HEV RS 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/05-1.webp","/seed/cars/05-2.webp","/seed/cars/05-3.webp"]'
+WHERE title = 'Honda HR-V e:HEV RS 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Yaris Ativ', '1.2 Premium', 2023, 469000, 'นนทบุรี', 'petrol', 15000, 'auto', 'สีขาวมุก', 'Yaris Ativ Sport ปี 23 ยังมีประกันศูนย์ วิ่งน้อย ประหยัดน้ำมัน', 'sedan', NULL, 1197, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Toyota Yaris Ativ 1.2 Premium 2023', '["/seed/cars/06-1.webp","/seed/cars/06-2.webp","/seed/cars/06-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Yaris Ativ 1.2 Premium 2023');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/06-1.webp","/seed/cars/06-2.webp","/seed/cars/06-3.webp"]'
+WHERE title = 'Toyota Yaris Ativ 1.2 Premium 2023' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mazda', 'CX-5', '2.0 SP', 2021, 979000, 'กรุงเทพมหานคร', 'petrol', 48000, 'auto', 'สีน้ำเงิน Soul Red', 'CX-5 2.0 SP ปี 21 ออฟชันเยอะ หนังแท้ หลังคาแก้ว สภาพสวย', 'suv', NULL, 1998, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Mazda CX-5 2.0 SP 2021', '["/seed/cars/07-1.webp","/seed/cars/07-2.webp","/seed/cars/07-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mazda CX-5 2.0 SP 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/07-1.webp","/seed/cars/07-2.webp","/seed/cars/07-3.webp"]'
+WHERE title = 'Mazda CX-5 2.0 SP 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Ford', 'Ranger', 'Double Cab Wildtrak 2.0', 2022, 679000, 'นครราชสีมา', 'diesel', 31000, 'auto', 'สีเทา', 'Ranger Wildtrak 2.0T ปี 22 4x4 อุปกรณ์ครบ ราคาดี', 'pickup', 'double', 1996, '4wd', 5, 'dealer', 1, 'none', false, 'clear', 'active', 'Ford Ranger Double Cab Wildtrak 2.0 2022', '["/seed/cars/08-1.webp","/seed/cars/08-2.webp","/seed/cars/08-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Ford Ranger Double Cab Wildtrak 2.0 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/08-1.webp","/seed/cars/08-2.webp","/seed/cars/08-3.webp"]'
+WHERE title = 'Ford Ranger Double Cab Wildtrak 2.0 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'BYD', 'Atto 3', 'Extended Range', 2023, 1099000, 'กรุงเทพมหานคร', 'electric', 12000, 'auto', 'สีขาว', 'BYD Atto 3 Extended Range ปี 23 วิ่ง 420 กม./ชาร์จ แบตเตอรี่ดี ไม่มีค่าน้ำมัน', 'suv', NULL, NULL, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'BYD Atto 3 Extended Range 2023', '["/seed/cars/09-1.webp","/seed/cars/09-2.webp","/seed/cars/09-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'BYD Atto 3 Extended Range 2023');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/09-1.webp","/seed/cars/09-2.webp","/seed/cars/09-3.webp"]'
+WHERE title = 'BYD Atto 3 Extended Range 2023' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Alphard', '2.5 SC Package', 2022, 3499000, 'กรุงเทพมหานคร', 'hybrid', 18000, 'auto', 'สีดำ', 'Alphard Hybrid SC ปี 22 เบาะ Executive Lounge แทบไม่ได้ใช้ ราคาต่อรอง', 'van', NULL, 2494, '2wd', 7, 'dealer', 1, 'none', false, 'clear', 'active', 'Toyota Alphard 2.5 SC Package 2022', '["/seed/cars/10-1.webp","/seed/cars/10-2.webp","/seed/cars/10-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Alphard 2.5 SC Package 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/10-1.webp","/seed/cars/10-2.webp","/seed/cars/10-3.webp"]'
+WHERE title = 'Toyota Alphard 2.5 SC Package 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'Jazz', '1.5 RS', 2020, 469000, 'สมุทรปราการ', 'petrol', 65000, 'auto', 'สีเทา', 'Jazz 1.5 V+ ปี 20 เครื่องดี ช่วงล่างแน่น พร้อมใช้ ราคาต่อรองได้', 'hatchback', NULL, 1497, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Honda Jazz 1.5 RS 2020', '["/seed/cars/11-1.webp","/seed/cars/11-2.webp","/seed/cars/11-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda Jazz 1.5 RS 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/11-1.webp","/seed/cars/11-2.webp","/seed/cars/11-3.webp"]'
+WHERE title = 'Honda Jazz 1.5 RS 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mitsubishi', 'Pajero Sport', '2.4 GT Premium', 2022, 1249000, 'ภูเก็ต', 'diesel', 35000, 'auto', 'สีขาวไข่มุก', 'Pajero Sport GT Premium ปี 22 4WD ออฟชันเต็ม ประวัติดีมาก', 'ppv', NULL, 2442, '2wd', 7, 'private', 1, 'none', false, 'clear', 'active', 'Mitsubishi Pajero Sport 2.4 GT Premium 2022', '["/seed/cars/12-1.webp","/seed/cars/12-2.webp","/seed/cars/12-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mitsubishi Pajero Sport 2.4 GT Premium 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/12-1.webp","/seed/cars/12-2.webp","/seed/cars/12-3.webp"]'
+WHERE title = 'Mitsubishi Pajero Sport 2.4 GT Premium 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'BMW', '320d', 'M Sport', 2021, 1799000, 'กรุงเทพมหานคร', 'diesel', 44000, 'auto', 'สีดำ Saphire', 'BMW 320d M Sport ปี 21 ดีเซล เครื่องดี ประหยัดน้ำมัน อุปกรณ์ครบ', 'sedan', NULL, 1995, '2wd', 5, 'dealer', 1, 'none', false, 'clear', 'active', 'BMW 320d M Sport 2021', '["/seed/cars/13-1.webp","/seed/cars/13-2.webp","/seed/cars/13-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'BMW 320d M Sport 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/13-1.webp","/seed/cars/13-2.webp","/seed/cars/13-3.webp"]'
+WHERE title = 'BMW 320d M Sport 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Corolla Cross', '1.8 HEV Premium', 2022, 869000, 'อุดรธานี', 'hybrid', 29000, 'auto', 'สีขาว', 'Corolla Cross Hybrid HV ปี 22 วิ่งในเมือง ประหยัดน้ำมันมาก สภาพสวย', 'suv', NULL, 1798, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Toyota Corolla Cross 1.8 HEV Premium 2022', '["/seed/cars/14-1.webp","/seed/cars/14-2.webp","/seed/cars/14-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Corolla Cross 1.8 HEV Premium 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/14-1.webp","/seed/cars/14-2.webp","/seed/cars/14-3.webp"]'
+WHERE title = 'Toyota Corolla Cross 1.8 HEV Premium 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'CR-V', '2.4 ES 4WD', 2022, 1349000, 'ปทุมธานี', 'petrol', 25000, 'auto', 'สีขาว', 'CR-V Turbo EL ปี 22 ออฟชันเต็ม 7 ที่นั่ง หนังแท้ หลังคาแก้ว', 'suv', NULL, 2356, 'awd', 7, 'private', 1, 'none', false, 'clear', 'active', 'Honda CR-V 2.4 ES 4WD 2022', '["/seed/cars/15-1.webp","/seed/cars/15-2.webp","/seed/cars/15-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda CR-V 2.4 ES 4WD 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/15-1.webp","/seed/cars/15-2.webp","/seed/cars/15-3.webp"]'
+WHERE title = 'Honda CR-V 2.4 ES 4WD 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Nissan', 'Navara', 'Double Cab Calibre V', 2021, 599000, 'สุราษฎร์ธานี', 'diesel', 58000, 'manual', 'สีเทา', 'Navara King Cab Calibre EL ปี 21 ดีเซล 2.5 ทำงานไร่ สภาพดี', 'pickup', 'double', 2298, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Nissan Navara Double Cab Calibre V 2021', '["/seed/cars/16-1.webp","/seed/cars/16-2.webp","/seed/cars/16-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Nissan Navara Double Cab Calibre V 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/16-1.webp","/seed/cars/16-2.webp","/seed/cars/16-3.webp"]'
+WHERE title = 'Nissan Navara Double Cab Calibre V 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'MG', 'ZS EV', 'Long Range', 2023, 699000, 'กรุงเทพมหานคร', 'electric', 9000, 'auto', 'สีแดง', 'MG ZS EV Long Range ปี 23 วิ่ง 440 กม./ชาร์จ ยังมีประกัน 3 ปี', 'suv', NULL, NULL, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'MG ZS EV Long Range 2023', '["/seed/cars/17-1.webp","/seed/cars/17-2.webp","/seed/cars/17-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'MG ZS EV Long Range 2023');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/17-1.webp","/seed/cars/17-2.webp","/seed/cars/17-3.webp"]'
+WHERE title = 'MG ZS EV Long Range 2023' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Hilux Revo', 'Smart Cab Entry 2.4', 2022, 549000, 'เชียงราย', 'diesel', 42000, 'manual', 'สีขาว', 'Hilux Revo Smart Cab Entry ปี 22 ดีเซล 2.4 ใช้งานในจังหวัด สภาพดี', 'pickup', 'extended', 2393, '2wd', 2, 'private', 1, 'none', false, 'clear', 'active', 'Toyota Hilux Revo Smart Cab Entry 2.4 2022', '["/seed/cars/18-1.webp","/seed/cars/18-2.webp","/seed/cars/18-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Hilux Revo Smart Cab Entry 2.4 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/18-1.webp","/seed/cars/18-2.webp","/seed/cars/18-3.webp"]'
+WHERE title = 'Toyota Hilux Revo Smart Cab Entry 2.4 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'City', 'e:HEV RS', 2022, 639000, 'กรุงเทพมหานคร', 'hybrid', 19000, 'auto', 'สีเทา Urban', 'City e:HEV RS ปี 22 ไฮบริด วิ่งน้อย ประวัติศูนย์ครบ พร้อมโอน', 'sedan', NULL, 1498, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Honda City e:HEV RS 2022', '["/seed/cars/19-1.webp","/seed/cars/19-2.webp","/seed/cars/19-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda City e:HEV RS 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/19-1.webp","/seed/cars/19-2.webp","/seed/cars/19-3.webp"]'
+WHERE title = 'Honda City e:HEV RS 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mazda', '2', '1.3 SP', 2022, 489000, 'ระยอง', 'petrol', 33000, 'auto', 'สีแดง Soul Red', 'Mazda2 1.3 SP ปี 22 เบนซิน สภาพสวยมาก ดูแลดี ราคาต่อรองได้', 'hatchback', NULL, 1298, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Mazda 2 1.3 SP 2022', '["/seed/cars/20-1.webp","/seed/cars/20-2.webp","/seed/cars/20-3.webp"]', (SELECT id FROM public.profiles WHERE role = 'admin' ORDER BY created_at LIMIT 1)
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mazda 2 1.3 SP 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/20-1.webp","/seed/cars/20-2.webp","/seed/cars/20-3.webp"]'
+WHERE title = 'Mazda 2 1.3 SP 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Vios', '1.5 G', 2019, 389000, 'กรุงเทพมหานคร', 'petrol', 89000, 'auto', 'สีบรอนซ์เงิน', 'Vios 1.5 G ปี 19 ใช้ขับไปทำงาน เปลี่ยนยางใหม่ปีที่แล้ว แอร์เย็น ภายในสะอาด', 'sedan', NULL, 1496, '2wd', 5, 'private', 2, 'none', false, 'clear', 'active', 'Toyota Vios 1.5 G 2019', '["/seed/cars/21-1.webp","/seed/cars/21-2.webp","/seed/cars/21-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Vios 1.5 G 2019');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/21-1.webp","/seed/cars/21-2.webp","/seed/cars/21-3.webp"]'
+WHERE title = 'Toyota Vios 1.5 G 2019' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'Accord', '2.0 e:HEV EL+', 2020, 1159000, 'กรุงเทพมหานคร', 'hybrid', 52000, 'auto', 'สีดำ Crystal', 'Accord Hybrid ปี 20 ตัวท็อป เบาะไฟฟ้า HUD ประวัติศูนย์ทุกระยะ ไม่เคยชน', 'sedan', NULL, 1993, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Honda Accord 2.0 e:HEV EL+ 2020', '["/seed/cars/22-1.webp","/seed/cars/22-2.webp","/seed/cars/22-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda Accord 2.0 e:HEV EL+ 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/22-1.webp","/seed/cars/22-2.webp","/seed/cars/22-3.webp"]'
+WHERE title = 'Honda Accord 2.0 e:HEV EL+ 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mercedes-Benz', 'C300e', 'AMG Dynamic', 2021, 1890000, 'กรุงเทพมหานคร', 'hybrid', 36000, 'auto', 'สีขาว Polar', 'C300e ปลั๊กอินไฮบริด ปี 21 Warranty ศูนย์เหลือ ไฟแนนซ์โปะต่อได้ ดาวน์น้อย', 'sedan', NULL, 1991, '2wd', 5, 'dealer', 1, 'none', false, 'financing', 'active', 'Mercedes-Benz C300e AMG Dynamic 2021', '["/seed/cars/23-1.webp","/seed/cars/23-2.webp","/seed/cars/23-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mercedes-Benz C300e AMG Dynamic 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/23-1.webp","/seed/cars/23-2.webp","/seed/cars/23-3.webp"]'
+WHERE title = 'Mercedes-Benz C300e AMG Dynamic 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Isuzu', 'D-Max', 'Cab4 Hi-Lander 1.9 Z', 2020, 579000, 'นครปฐม', 'diesel', 74000, 'auto', 'สีน้ำเงิน', 'D-Max Cab4 ตัวสูง ปี 20 ออโต้ ใช้งานครอบครัว เข้าศูนย์ตลอด มีสมุดเช็คระยะ', 'pickup', 'double', 1898, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Isuzu D-Max Cab4 Hi-Lander 1.9 Z 2020', '["/seed/cars/24-1.webp","/seed/cars/24-2.webp","/seed/cars/24-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Isuzu D-Max Cab4 Hi-Lander 1.9 Z 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/24-1.webp","/seed/cars/24-2.webp","/seed/cars/24-3.webp"]'
+WHERE title = 'Isuzu D-Max Cab4 Hi-Lander 1.9 Z 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Hilux Revo', 'Standard Cab 2.4 Entry', 2018, 389000, 'สุพรรณบุรี', 'diesel', 142000, 'manual', 'สีขาว', 'Revo ตอนเดียว ปี 18 ใช้บรรทุกของ เครื่องดี เคยเฉี่ยวเล็กน้อยท้ายกระบะ ซ่อมแล้ว', 'pickup', 'single', 2393, '2wd', 2, 'private', 2, 'minor', false, 'clear', 'active', 'Toyota Hilux Revo Standard Cab 2.4 Entry 2018', '["/seed/cars/25-1.webp","/seed/cars/25-2.webp","/seed/cars/25-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Hilux Revo Standard Cab 2.4 Entry 2018');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/25-1.webp","/seed/cars/25-2.webp","/seed/cars/25-3.webp"]'
+WHERE title = 'Toyota Hilux Revo Standard Cab 2.4 Entry 2018' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mitsubishi', 'Triton', 'Double Cab Athlete 4WD', 2022, 899000, 'เชียงใหม่', 'diesel', 41000, 'auto', 'สีส้ม', 'Triton Athlete 4WD ปี 22 ยกสูงจากโรงงาน ขึ้นดอยสบาย รับประกันเครื่องเกียร์ 1 ปี', 'pickup', 'double', 2442, '4wd', 5, 'dealer', 1, 'none', false, 'clear', 'active', 'Mitsubishi Triton Double Cab Athlete 4WD 2022', '["/seed/cars/26-1.webp","/seed/cars/26-2.webp","/seed/cars/26-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mitsubishi Triton Double Cab Athlete 4WD 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/26-1.webp","/seed/cars/26-2.webp","/seed/cars/26-3.webp"]'
+WHERE title = 'Mitsubishi Triton Double Cab Athlete 4WD 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Nissan', 'Almera', '1.0 Turbo VL', 2021, 429000, 'ปทุมธานี', 'petrol', 38000, 'auto', 'สีส้มแดง', 'Almera Turbo VL ปี 21 ตัวท็อป ประหยัดมาก ขับในเมือง ผู้หญิงใช้', 'sedan', NULL, 999, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Nissan Almera 1.0 Turbo VL 2021', '["/seed/cars/27-1.webp","/seed/cars/27-2.webp","/seed/cars/27-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Nissan Almera 1.0 Turbo VL 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/27-1.webp","/seed/cars/27-2.webp","/seed/cars/27-3.webp"]'
+WHERE title = 'Nissan Almera 1.0 Turbo VL 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Suzuki', 'Swift', '1.2 GLX', 2020, 399000, 'ขอนแก่น', 'petrol', 61000, 'auto', 'สีเหลือง', 'Swift GLX ปี 20 สีเหลืองหายาก ขับสนุก ประหยัด ยางยังเหลือเยอะ', 'hatchback', NULL, 1197, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Suzuki Swift 1.2 GLX 2020', '["/seed/cars/28-1.webp","/seed/cars/28-2.webp","/seed/cars/28-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Suzuki Swift 1.2 GLX 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/28-1.webp","/seed/cars/28-2.webp","/seed/cars/28-3.webp"]'
+WHERE title = 'Suzuki Swift 1.2 GLX 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mazda', '3', '2.0 SP Sports', 2020, 699000, 'กรุงเทพมหานคร', 'petrol', 47000, 'auto', 'สีแดง Soul Red', 'Mazda3 Fastback 2.0 SP ปี 20 หนังแดง เสียงดี Bose ไม่เคยชน ไม่เคยจมน้ำ', 'hatchback', NULL, 1998, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Mazda 3 2.0 SP Sports 2020', '["/seed/cars/29-1.webp","/seed/cars/29-2.webp","/seed/cars/29-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mazda 3 2.0 SP Sports 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/29-1.webp","/seed/cars/29-2.webp","/seed/cars/29-3.webp"]'
+WHERE title = 'Mazda 3 2.0 SP Sports 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Veloz', '1.5 Premium', 2023, 789000, 'ชลบุรี', 'petrol', 14000, 'auto', 'สีเทา', 'Veloz Premium ปี 23 รถครอบครัว 7 ที่นั่ง ยังมีประกันศูนย์ ใช้น้อย', 'mpv', NULL, 1496, '2wd', 7, 'private', 1, 'none', false, 'clear', 'active', 'Toyota Veloz 1.5 Premium 2023', '["/seed/cars/30-1.webp","/seed/cars/30-2.webp","/seed/cars/30-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Veloz 1.5 Premium 2023');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/30-1.webp","/seed/cars/30-2.webp","/seed/cars/30-3.webp"]'
+WHERE title = 'Toyota Veloz 1.5 Premium 2023' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mitsubishi', 'Xpander Cross', '1.5', 2021, 649000, 'นครราชสีมา', 'petrol', 56000, 'auto', 'สีน้ำตาล', 'Xpander Cross ปี 21 ใต้ท้องสูง 7 ที่นั่ง เหมาะกับครอบครัว เข้าศูนย์ตลอด', 'mpv', NULL, 1499, '2wd', 7, 'private', 1, 'none', false, 'clear', 'active', 'Mitsubishi Xpander Cross 1.5 2021', '["/seed/cars/31-1.webp","/seed/cars/31-2.webp","/seed/cars/31-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mitsubishi Xpander Cross 1.5 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/31-1.webp","/seed/cars/31-2.webp","/seed/cars/31-3.webp"]'
+WHERE title = 'Mitsubishi Xpander Cross 1.5 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Hyundai', 'Staria', '2.2 SEL', 2022, 1490000, 'กรุงเทพมหานคร', 'diesel', 33000, 'auto', 'สีเงิน', 'Staria SEL 11 ที่นั่ง ปี 22 ใช้รับส่งพนักงาน ภายในกว้าง ประตูไฟฟ้า', 'van', NULL, 2199, '2wd', 11, 'dealer', 1, 'none', false, 'clear', 'active', 'Hyundai Staria 2.2 SEL 2022', '["/seed/cars/32-1.webp","/seed/cars/32-2.webp","/seed/cars/32-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Hyundai Staria 2.2 SEL 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/32-1.webp","/seed/cars/32-2.webp","/seed/cars/32-3.webp"]'
+WHERE title = 'Hyundai Staria 2.2 SEL 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Commuter', '2.8 Standard Roof', 2019, 899000, 'สมุทรสาคร', 'diesel', 168000, 'manual', 'สีขาว', 'Commuter หลังคาเตี้ย ปี 19 15 ที่นั่ง เครื่องแรง ทำทัวร์ได้ทันที', 'van', NULL, 2755, '2wd', 15, 'dealer', 2, 'none', false, 'clear', 'active', 'Toyota Commuter 2.8 Standard Roof 2019', '["/seed/cars/33-1.webp","/seed/cars/33-2.webp","/seed/cars/33-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Commuter 2.8 Standard Roof 2019');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/33-1.webp","/seed/cars/33-2.webp","/seed/cars/33-3.webp"]'
+WHERE title = 'Toyota Commuter 2.8 Standard Roof 2019' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Isuzu', 'MU-X', '1.9 Elegant', 2021, 999000, 'อุบลราชธานี', 'diesel', 49000, 'auto', 'สีเทาเข้ม', 'MU-X Elegant ปี 21 รุ่นใหม่ จอใหญ่ กล้องรอบคัน ขับทางไกลสบาย', 'ppv', NULL, 1898, '2wd', 7, 'private', 1, 'none', false, 'clear', 'active', 'Isuzu MU-X 1.9 Elegant 2021', '["/seed/cars/34-1.webp","/seed/cars/34-2.webp","/seed/cars/34-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Isuzu MU-X 1.9 Elegant 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/34-1.webp","/seed/cars/34-2.webp","/seed/cars/34-3.webp"]'
+WHERE title = 'Isuzu MU-X 1.9 Elegant 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Ford', 'Everest', '2.0 Titanium+ 4WD', 2020, 1099000, 'ภูเก็ต', 'diesel', 68000, 'auto', 'สีน้ำตาลทอง', 'Everest Titanium+ ปี 20 เคยลุยน้ำท่วมระดับล้อ เปลี่ยนพรมและเช็คระบบไฟแล้ว ราคาจึงต่ำกว่าตลาด', 'ppv', NULL, 1996, '4wd', 7, 'private', 1, 'none', true, 'clear', 'active', 'Ford Everest 2.0 Titanium+ 4WD 2020', '["/seed/cars/35-1.webp","/seed/cars/35-2.webp","/seed/cars/35-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Ford Everest 2.0 Titanium+ 4WD 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/35-1.webp","/seed/cars/35-2.webp","/seed/cars/35-3.webp"]'
+WHERE title = 'Ford Everest 2.0 Titanium+ 4WD 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Kia', 'Carnival', '2.2 SXL', 2022, 2290000, 'กรุงเทพมหานคร', 'diesel', 27000, 'auto', 'สีดำ', 'Carnival SXL ปี 22 ตัวท็อป ประตูสไลด์ไฟฟ้า ซันรูฟ 2 ตอน สภาพป้ายแดง', 'mpv', NULL, 2151, '2wd', 11, 'dealer', 1, 'none', false, 'clear', 'active', 'Kia Carnival 2.2 SXL 2022', '["/seed/cars/36-1.webp","/seed/cars/36-2.webp","/seed/cars/36-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Kia Carnival 2.2 SXL 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/36-1.webp","/seed/cars/36-2.webp","/seed/cars/36-3.webp"]'
+WHERE title = 'Kia Carnival 2.2 SXL 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Tesla', 'Model 3', 'Long Range AWD', 2023, 1390000, 'กรุงเทพมหานคร', 'electric', 21000, 'auto', 'สีน้ำเงิน', 'Model 3 Long Range ปี 23 Autopilot แบตเตอรี่ 97% วิ่งได้ 560 กม. ชาร์จบ้าน', 'sedan', NULL, NULL, 'awd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Tesla Model 3 Long Range AWD 2023', '["/seed/cars/37-1.webp","/seed/cars/37-2.webp","/seed/cars/37-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Tesla Model 3 Long Range AWD 2023');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/37-1.webp","/seed/cars/37-2.webp","/seed/cars/37-3.webp"]'
+WHERE title = 'Tesla Model 3 Long Range AWD 2023' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'BYD', 'Dolphin', 'Extended Range', 2024, 599000, 'เชียงใหม่', 'electric', 8000, 'auto', 'สีชมพู', 'Dolphin ปี 24 วิ่งน้อยมาก ใช้ในเมือง ชาร์จที่คอนโด ประกันชั้น 1 เหลือ 8 เดือน', 'hatchback', NULL, NULL, '2wd', 5, 'private', 1, 'none', false, 'clear', 'active', 'BYD Dolphin Extended Range 2024', '["/seed/cars/38-1.webp","/seed/cars/38-2.webp","/seed/cars/38-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'BYD Dolphin Extended Range 2024');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/38-1.webp","/seed/cars/38-2.webp","/seed/cars/38-3.webp"]'
+WHERE title = 'BYD Dolphin Extended Range 2024' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Subaru', 'Forester', '2.0i-S EyeSight', 2020, 889000, 'นนทบุรี', 'petrol', 57000, 'auto', 'สีเขียว', 'Forester EyeSight ปี 20 ขับเคลื่อน 4 ล้อตลอดเวลา ระบบความปลอดภัยครบ', 'suv', NULL, 1995, 'awd', 5, 'private', 1, 'none', false, 'clear', 'active', 'Subaru Forester 2.0i-S EyeSight 2020', '["/seed/cars/39-1.webp","/seed/cars/39-2.webp","/seed/cars/39-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Subaru Forester 2.0i-S EyeSight 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/39-1.webp","/seed/cars/39-2.webp","/seed/cars/39-3.webp"]'
+WHERE title = 'Subaru Forester 2.0i-S EyeSight 2020' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'Civic', '1.8 EL', 2017, 549000, 'นครศรีธรรมราช', 'petrol', 118000, 'auto', 'สีขาว', 'Civic FC 1.8 EL ปี 17 เคยชนหน้าหนัก ซ่อมศูนย์ประกัน มีรูปก่อนซ่อมให้ดู ขายถูก', 'sedan', NULL, 1799, '2wd', 5, 'private', 3, 'major', false, 'clear', 'active', 'Honda Civic 1.8 EL 2017', '["/seed/cars/40-1.webp","/seed/cars/40-2.webp","/seed/cars/40-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda Civic 1.8 EL 2017');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/40-1.webp","/seed/cars/40-2.webp","/seed/cars/40-3.webp"]'
+WHERE title = 'Honda Civic 1.8 EL 2017' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Suzuki', 'Jimny', '1.5 4WD', 2022, 1290000, 'เชียงราย', 'petrol', 19000, 'manual', 'สีเขียวขี้ม้า', 'Jimny เกียร์ธรรมดา ปี 22 หายาก ลุยได้จริง ใส่ล้อแม็ก+ยาง AT', 'suv', NULL, 1462, '4wd', 4, 'private', 1, 'none', false, 'clear', 'active', 'Suzuki Jimny 1.5 4WD 2022', '["/seed/cars/41-1.webp","/seed/cars/41-2.webp","/seed/cars/41-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Suzuki Jimny 1.5 4WD 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/41-1.webp","/seed/cars/41-2.webp","/seed/cars/41-3.webp"]'
+WHERE title = 'Suzuki Jimny 1.5 4WD 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Mazda', 'MX-5', '2.0 RF', 2019, 1790000, 'กรุงเทพมหานคร', 'petrol', 23000, 'manual', 'สีเทา Machine', 'MX-5 RF หลังคาแข็งพับได้ ปี 19 ขับวันหยุด เก็บในร่ม ไม่เคยลงสนาม', 'coupe', NULL, 1998, '2wd', 2, 'private', 1, 'none', false, 'clear', 'active', 'Mazda MX-5 2.0 RF 2019', '["/seed/cars/42-1.webp","/seed/cars/42-2.webp","/seed/cars/42-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Mazda MX-5 2.0 RF 2019');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/42-1.webp","/seed/cars/42-2.webp","/seed/cars/42-3.webp"]'
+WHERE title = 'Mazda MX-5 2.0 RF 2019' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Ford', 'Mustang', '2.3 EcoBoost', 2018, 1990000, 'กรุงเทพมหานคร', 'petrol', 39000, 'auto', 'สีเหลือง', 'Mustang 2.3 EcoBoost ปี 18 ป้ายแดงศูนย์ไทย เบาะ Recaro ประวัติดี', 'coupe', NULL, 2261, '2wd', 4, 'dealer', 2, 'none', false, 'clear', 'active', 'Ford Mustang 2.3 EcoBoost 2018', '["/seed/cars/43-1.webp","/seed/cars/43-2.webp","/seed/cars/43-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Ford Mustang 2.3 EcoBoost 2018');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/43-1.webp","/seed/cars/43-2.webp","/seed/cars/43-3.webp"]'
+WHERE title = 'Ford Mustang 2.3 EcoBoost 2018' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Toyota', 'Corolla Altis', '1.8 GR Sport', 2021, 789000, 'สงขลา', 'hybrid', 44000, 'auto', 'สีดำ', 'Altis GR Sport ปี 21 ปิดไฟแนนซ์แล้ว เล่มอยู่ในมือ โอนได้ทันที', 'sedan', NULL, 1798, '2wd', 5, 'private', 1, 'none', false, 'paid_off', 'active', 'Toyota Corolla Altis 1.8 GR Sport 2021', '["/seed/cars/44-1.webp","/seed/cars/44-2.webp","/seed/cars/44-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Toyota Corolla Altis 1.8 GR Sport 2021');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/44-1.webp","/seed/cars/44-2.webp","/seed/cars/44-3.webp"]'
+WHERE title = 'Toyota Corolla Altis 1.8 GR Sport 2021' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Nissan', 'Kicks', 'e-Power VL', 2022, 679000, 'กรุงเทพมหานคร', 'hybrid', 26000, 'auto', 'สีขาว', 'Kicks e-Power ปี 22 ขับเหมือนรถไฟฟ้า ไม่ต้องชาร์จ (ประกาศนี้รอแอดมินตรวจ)', 'suv', NULL, 1198, '2wd', 5, 'private', 1, 'none', false, 'clear', 'pending', 'Nissan Kicks e-Power VL 2022', '["/seed/cars/45-1.webp","/seed/cars/45-2.webp","/seed/cars/45-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Nissan Kicks e-Power VL 2022');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/45-1.webp","/seed/cars/45-2.webp","/seed/cars/45-3.webp"]'
+WHERE title = 'Nissan Kicks e-Power VL 2022' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'MG', 'MG4 Electric', 'X', 2023, 739000, 'ระยอง', 'electric', 11000, 'auto', 'สีฟ้า', 'MG4 Electric X ปี 23 ขับหลัง ช่วงล่างดี (ประกาศนี้รอแอดมินตรวจ)', 'hatchback', NULL, NULL, '2wd', 5, 'private', 1, 'none', false, 'clear', 'pending', 'MG MG4 Electric X 2023', '["/seed/cars/46-1.webp","/seed/cars/46-2.webp","/seed/cars/46-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'MG MG4 Electric X 2023');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/46-1.webp","/seed/cars/46-2.webp","/seed/cars/46-3.webp"]'
+WHERE title = 'MG MG4 Electric X 2023' AND jsonb_array_length(images::jsonb) = 0;
+
+INSERT INTO public.listings (brand, model, variant, year, price, province, fuel_type, mileage, transmission, color, description, body_type, cab_type, engine_cc, drivetrain, seats, seller_type, num_owners, accident_history, flood_damage, finance_status, status, title, images, user_id)
+SELECT 'Honda', 'BR-V', '1.5 EL', 2020, 559000, 'พิษณุโลก', 'petrol', 63000, 'auto', 'สีเทา', 'BR-V 7 ที่นั่ง ปี 20 (ขายแล้ว — ไว้ทดสอบป้ายขายแล้ว)', 'mpv', NULL, 1497, '2wd', 7, 'private', 1, 'none', false, 'clear', 'sold', 'Honda BR-V 1.5 EL 2020', '["/seed/cars/47-1.webp","/seed/cars/47-2.webp","/seed/cars/47-3.webp"]', '5eed0000-0000-4000-8000-000000000001'
+WHERE NOT EXISTS (SELECT 1 FROM public.listings WHERE title = 'Honda BR-V 1.5 EL 2020');
+-- รันซ้ำ: ประกาศเดิมที่ยังไม่มีรูป → ใส่รูปให้
+UPDATE public.listings SET images = '["/seed/cars/47-1.webp","/seed/cars/47-2.webp","/seed/cars/47-3.webp"]'
+WHERE title = 'Honda BR-V 1.5 EL 2020' AND jsonb_array_length(images::jsonb) = 0;
 
 -- ── ตัวอย่างรถแต่ง: Civic RS (migration 007) ──────────
 WITH civic AS (
@@ -183,8 +407,13 @@ WITH civic AS (
   SET modification_level = 'moderate'
   WHERE id = (
     SELECT id FROM public.listings
-    WHERE brand = 'Honda' AND model = 'Civic' AND year = 2021 AND variant = '1.5 Turbo RS'
+    WHERE title = 'Honda Civic 1.5 Turbo RS 2021'
     ORDER BY created_at DESC LIMIT 1
+  )
+  AND NOT EXISTS (
+    SELECT 1 FROM public.listing_modifications m
+    JOIN public.listings l ON l.id = m.listing_id
+    WHERE l.title = 'Honda Civic 1.5 Turbo RS 2021'
   )
   RETURNING id
 )
@@ -197,3 +426,26 @@ FROM civic, (VALUES
   ('exhaust',    'ท่อไอเสีย',     'ท่อเดิม',               'ปลายท่อสแตนเลส เสียงไม่ดังเกินกฎหมาย', false, 'not_required', false),
   ('other',      'ฟิล์มกรองแสง', 'ไม่มี',                 'ฟิล์มเซรามิก 60%',                    false, 'not_required', true)
 ) AS m(category, item, stock_spec, modified_spec, stock_part_included, legal_status, has_receipt);
+
+-- ── ประวัติรถ (Car History Card) ─────────────────────
+INSERT INTO public.car_events (listing_id, event_date, event_type, description, mileage_at)
+SELECT l.id, e.event_date, e.event_type, e.description, e.mileage_at
+FROM (VALUES
+  ('Toyota Camry 2.5 HEV Premium 2022', '2023-03-10'::date, 'ตรวจสภาพ', 'เช็คระยะ 10,000 กม. ที่ศูนย์', 10000),
+  ('Toyota Camry 2.5 HEV Premium 2022', '2024-02-18'::date, 'เปลี่ยนอะไหล่', 'เปลี่ยนยาง 4 เส้น Michelin Primacy', 21000),
+  ('Toyota Vios 1.5 G 2019', '2021-06-02'::date, 'ซ่อม', 'เปลี่ยนคอมแอร์', 45000),
+  ('Toyota Vios 1.5 G 2019', '2023-09-15'::date, 'เปลี่ยนอะไหล่', 'เปลี่ยนยาง + ผ้าเบรกหน้า', 78000),
+  ('Toyota Hilux Revo Standard Cab 2.4 Entry 2018', '2020-11-20'::date, 'อุบัติเหตุ', 'เฉี่ยวท้ายกระบะ ซ่อมสีฝาท้าย', 70000),
+  ('Toyota Hilux Revo Standard Cab 2.4 Entry 2018', '2024-05-01'::date, 'เปลี่ยนอะไหล่', 'เปลี่ยนคลัตช์ชุดใหม่', 130000),
+  ('Honda Civic 1.8 EL 2017', '2019-08-12'::date, 'อุบัติเหตุ', 'ชนด้านหน้า ประกันซ่อมที่ศูนย์ เปลี่ยนหม้อน้ำ กันชน ไฟหน้า', 52000),
+  ('Honda Civic 1.8 EL 2017', '2022-01-30'::date, 'ตรวจสภาพ', 'ตรวจสภาพตรอ. ผ่าน', 88000),
+  ('Ford Everest 2.0 Titanium+ 4WD 2020', '2022-10-05'::date, 'ซ่อม', 'ลุยน้ำท่วมระดับล้อ เปลี่ยนพรม ล้างระบบเบรก เช็คปลั๊กไฟ', 51000),
+  ('Tesla Model 3 Long Range AWD 2023', '2024-07-20'::date, 'ตรวจสภาพ', 'ตรวจแบตเตอรี่ที่ศูนย์ สุขภาพแบต 97%', 15000)
+) AS e(title, event_date, event_type, description, mileage_at)
+JOIN LATERAL (
+  SELECT id FROM public.listings WHERE title = e.title ORDER BY created_at LIMIT 1
+) l ON true
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.car_events c
+  WHERE c.listing_id = l.id AND c.event_date = e.event_date AND c.event_type = e.event_type
+);
