@@ -80,28 +80,38 @@ async function loadListings(supabase: Supabase) {
 async function loadVerifications(supabase: Supabase): Promise<VerificationItem[]> {
   const { data } = await supabase
     .from("verification_requests")
-    .select("id, user_id, doc_path, created_at")
+    .select("id, user_id, doc_path, selfie_path, created_at")
     .eq("status", "pending")
     .order("created_at", { ascending: true })
 
-  const reqs = (data ?? []) as Array<{ id: string; user_id: string; doc_path: string; created_at: string }>
+  const reqs = (data ?? []) as Array<{
+    id: string; user_id: string; doc_path: string | null; selfie_path: string | null; created_at: string
+  }>
   if (reqs.length === 0) return []
 
-  const [{ data: profiles }, ...urls] = await Promise.all([
-    supabase.from("profiles").select("id, display_name").in("id", reqs.map((r) => r.user_id)),
-    ...reqs.map((r) => supabase.storage.from("verification-docs").createSignedUrl(r.doc_path, 3600)),
-  ])
-  const names = new Map(
-    ((profiles ?? []) as Array<{ id: string; display_name: string | null }>).map((p) => [p.id, p.display_name])
-  )
+  const signed = (path: string | null) =>
+    path ? supabase.storage.from("verification-docs").createSignedUrl(path, 3600) : Promise.resolve({ data: null })
 
-  return reqs.map((r, i) => ({
-    id: r.id,
-    user_id: r.user_id,
-    created_at: r.created_at,
-    display_name: names.get(r.user_id) ?? null,
-    doc_url: urls[i].data?.signedUrl ?? null,
-  }))
+  // Account facts + history come from admin_user_overview() (migration 010)
+  return Promise.all(
+    reqs.map(async (r) => {
+      const [doc, selfie, overview] = await Promise.all([
+        signed(r.doc_path),
+        signed(r.selfie_path),
+        supabase.rpc("admin_user_overview", { p_user_id: r.user_id }),
+      ])
+      const account = (overview.data as VerificationItem["account"]) ?? null
+      return {
+        id: r.id,
+        user_id: r.user_id,
+        created_at: r.created_at,
+        doc_url: doc.data?.signedUrl ?? null,
+        selfie_url: selfie.data?.signedUrl ?? null,
+        account,
+        account_age_days: account ? Math.floor((Date.now() - new Date(account.signed_up_at).getTime()) / 86_400_000) : null,
+      }
+    })
+  )
 }
 
 async function loadReports(supabase: Supabase): Promise<ReportItem[]> {
