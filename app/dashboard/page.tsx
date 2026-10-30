@@ -87,7 +87,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <h1 className="text-2xl font-bold text-zinc-900">แดชบอร์ด</h1>
 
-        <div className="grid gap-4 md:grid-cols-[1fr_260px]">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_260px]">
           <ProfileCard
             profile={profile}
             userEmail={user.email ?? ""}

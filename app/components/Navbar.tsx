@@ -40,7 +40,7 @@ export default async function Navbar() {
         <div className="flex items-center gap-1 sm:gap-2">
           <Link
             href="/listings"
-            className="text-sm text-zinc-300 hover:text-white px-2 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="hidden min-[360px]:block whitespace-nowrap text-sm text-zinc-300 hover:text-white px-2 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
           >
             ค้นหารถ
           </Link>
@@ -55,7 +55,7 @@ export default async function Navbar() {
           {!user && (
             <Link
               href="/sell"
-              className="text-sm bg-amber-500 hover:bg-amber-400 text-zinc-900 font-semibold px-4 py-1.5 rounded-full transition-colors"
+              className="whitespace-nowrap text-sm bg-amber-500 hover:bg-amber-400 text-zinc-900 font-semibold px-3 min-[360px]:px-4 py-1.5 rounded-full transition-colors"
             >
               ลงขาย
             </Link>

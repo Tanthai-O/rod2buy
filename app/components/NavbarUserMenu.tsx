@@ -43,7 +43,7 @@ export default function NavbarUserMenu({ user }: Props) {
     return (
       <Link
         href="/login"
-        className="text-sm border border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white px-4 py-1.5 rounded-full transition-colors"
+        className="whitespace-nowrap text-sm border border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white px-3 min-[360px]:px-4 py-1.5 rounded-full transition-colors"
       >
         เข้าสู่ระบบ
       </Link>
