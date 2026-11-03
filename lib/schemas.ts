@@ -86,3 +86,51 @@ export const modificationSchema = z.object({
 })
 
 export type ModificationInput = z.infer<typeof modificationSchema>
+
+const SPECIALTY_VALUES = [
+  "eco_car", "sedan", "pickup", "suv", "european", "luxury", "ev_hybrid", "modified",
+  "classic", "flood", "accident", "engine", "electrical", "paint", "documents",
+] as const
+
+export const inspectorProfileSchema = z.object({
+  headline: z.string().trim().min(5, "คำโปรยสั้นเกินไป (อย่างน้อย 5 ตัวอักษร)").max(120, "คำโปรยยาวเกินไป"),
+  bio: z.string().trim().max(3000, "แนะนำตัวยาวเกินไป").optional(),
+  years_experience: z.number().int().min(0).max(60, "จำนวนปีไม่ถูกต้อง"),
+  provinces: z.array(z.string()).min(1, "เลือกจังหวัดที่รับงานอย่างน้อย 1 จังหวัด").max(10, "เลือกได้สูงสุด 10 จังหวัด"),
+  specialties: z.array(z.enum(SPECIALTY_VALUES)).max(15),
+  brands: z.array(z.string()).max(20, "เลือกยี่ห้อได้สูงสุด 20 ยี่ห้อ"),
+  service_modes: z.array(z.enum(["on_site", "at_shop", "video_call"])).min(1, "เลือกรูปแบบบริการอย่างน้อย 1 แบบ"),
+  price_from: z.number().int().min(0).max(100_000).optional(),
+  price_to: z.number().int().min(0).max(100_000).optional(),
+  price_note: z.string().trim().max(200, "หมายเหตุราคายาวเกินไป").optional(),
+}).refine((d) => d.price_from == null || d.price_to == null || d.price_to >= d.price_from, {
+  message: "ราคาสูงสุดต้องไม่น้อยกว่าราคาเริ่มต้น",
+  path: ["price_to"],
+})
+
+export type InspectorProfileInput = z.infer<typeof inspectorProfileSchema>
+
+export const inspectionReportSchema = z.object({
+  brand: z.string().trim().min(1, "กรุณาเลือกยี่ห้อ").max(50),
+  model: z.string().trim().min(1, "กรุณาระบุรุ่น").max(100),
+  year: z.number().int().min(1950, "ปีไม่ถูกต้อง").max(CURRENT_YEAR + 1, "ปีไม่ถูกต้อง"),
+  province: z.string().max(100).optional(),
+  inspected_at: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "วันที่ไม่ถูกต้อง")
+    .refine((d) => new Date(d) <= new Date(), "วันที่ต้องไม่เกินวันนี้"),
+  verdict: z.enum(["recommend", "caution", "not_recommend"], { message: "กรุณาเลือกผลสรุป" }),
+  summary: z.string().trim().min(10, "สรุปผลสั้นเกินไป (อย่างน้อย 10 ตัวอักษร)").max(3000, "สรุปผลยาวเกินไป"),
+  checklist: z
+    .array(
+      z.object({
+        section: z.string().max(30),
+        status: z.enum(["ok", "minor", "issue", "na"]),
+        note: z.string().trim().max(300, "หมายเหตุยาวเกินไป").optional(),
+      })
+    )
+    .max(30),
+  listing_id: z.uuid().optional(),
+})
+
+export type InspectionReportInput = z.infer<typeof inspectionReportSchema>

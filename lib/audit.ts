@@ -11,6 +11,9 @@ type AuditAction =
   | "profile.verify_id"
   | "profile.update"
   | "contact.reveal_phone"
+  | "inspector.approve"
+  | "inspector.reject"
+  | "inspector.suspend"
 
 export async function logAudit(
   action: AuditAction,

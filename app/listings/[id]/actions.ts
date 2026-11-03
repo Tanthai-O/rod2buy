@@ -90,3 +90,21 @@ export async function reportListing(input: z.input<typeof reportSchema>): Promis
   if (error) return { error: "ส่งรายงานไม่สำเร็จ กรุณาลองใหม่" }
   return {}
 }
+
+// Listing owner shows (true) or hides (false) an inspector's report on their listing
+export async function confirmInspectionReport(
+  reportId: string,
+  listingId: string,
+  accept: boolean
+): Promise<{ error?: string }> {
+  if (!z.uuid().safeParse(reportId).success) return { error: "ไม่พบรายงาน" }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
+
+  const { error } = await supabase.rpc("confirm_inspection_report", { p_report_id: reportId, p_accept: accept })
+  if (error) return { error: "บันทึกไม่สำเร็จ กรุณาลองใหม่" }
+
+  revalidatePath(`/listings/${listingId}`)
+  return {}
+}

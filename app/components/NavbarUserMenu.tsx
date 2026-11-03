@@ -43,7 +43,7 @@ export default function NavbarUserMenu({ user }: Props) {
     return (
       <Link
         href="/login"
-        className="text-sm border border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white px-4 py-1.5 rounded-full transition-colors"
+        className="whitespace-nowrap text-sm border border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white px-3 sm:px-4 py-1.5 rounded-full transition-colors"
       >
         เข้าสู่ระบบ
       </Link>
@@ -115,6 +115,14 @@ export default function NavbarUserMenu({ user }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
               </svg>
               รายการที่บันทึก
+            </Link>
+            <Link
+              href="/dashboard/inspector"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+            >
+              <Icon name="shield" className="w-4 h-4 text-zinc-400" />
+              โปรไฟล์คนดูรถ
             </Link>
             <Link
               href="/account/security"

@@ -18,6 +18,8 @@ import SellerReviews, { type Review } from "./_components/SellerReviews"
 import LoanCalculator from "./_components/LoanCalculator"
 import ShareButtons from "./_components/ShareButtons"
 import SafetyTips from "./_components/SafetyTips"
+import InspectionReportsSection, { type ListingInspection } from "./_components/InspectionReportsSection"
+import type { InspectionReport } from "@/types/inspector"
 import ListingCard from "../_components/ListingCard"
 import { SITE_URL } from "@/lib/site"
 import Avatar from "@/app/components/Avatar"
@@ -87,7 +89,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   if (listing.status !== "active" && !isOwner && !isAdmin) notFound()
 
   // phone / LINE are never selected here — ContactSection reveals them via RPC (migration 003)
-  const [eventsRes, priceRes, profileRes, scoreRes, relatedRes, savedRes, reviewsRes, contactedRes, modsRes] = await Promise.all([
+  const [eventsRes, priceRes, profileRes, scoreRes, relatedRes, savedRes, reviewsRes, contactedRes, modsRes, inspectionsRes] = await Promise.all([
     supabase.from("car_events").select("*").eq("listing_id", id).order("event_date", { ascending: true }),
     supabase.from("price_estimates").select("*").eq("brand", listing.brand).eq("model", listing.model).eq("year", listing.year).maybeSingle(),
     listing.user_id
@@ -118,6 +120,10 @@ export default async function ListingDetailPage({ params }: PageProps) {
           .maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from("listing_modifications").select("*").eq("listing_id", id).order("created_at", { ascending: true }),
+    // Owner sees pending / hidden reports too, to decide on them
+    isOwner
+      ? supabase.from("inspection_reports").select("*").eq("listing_id", id).order("inspected_at", { ascending: false })
+      : supabase.from("inspection_reports").select("*").eq("listing_id", id).eq("listing_confirmed", true).order("inspected_at", { ascending: false }),
   ])
 
   const events = (eventsRes.data ?? []) as CarEvent[]
@@ -153,6 +159,19 @@ export default async function ListingDetailPage({ params }: PageProps) {
   }))
   const hasReviewed = !!user && rawReviews.some((r) => r.reviewer_id === user.id)
   const hasContacted = !!contactedRes.data
+
+  const rawInspections = (inspectionsRes.data ?? []) as InspectionReport[]
+  const inspectorIds = [...new Set(rawInspections.map((r) => r.inspector_id))]
+  const { data: inspectorRows } = inspectorIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", inspectorIds)
+    : { data: [] }
+  const inspectorNames = new Map(
+    ((inspectorRows ?? []) as Array<{ id: string; display_name: string | null }>).map((p) => [p.id, p.display_name])
+  )
+  const inspections: ListingInspection[] = rawInspections.map((r) => ({
+    ...r,
+    inspector_name: inspectorNames.get(r.inspector_id) ?? "คนดูรถ",
+  }))
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -284,6 +303,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
             {/* Trust section */}
             <TrustSection listing={listing} sellerProfile={sellerProfile} />
 
+            <InspectionReportsSection listingId={listing.id} isOwner={isOwner} reports={inspections} />
+
             {/* Description */}
             {listing.description && (
               <section className="bg-white rounded-2xl border border-zinc-100 p-5">
@@ -372,6 +393,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
             <ContactSection userId={user?.id ?? null} listingId={listing.id} isOwner={isOwner} />
 
             {!isOwner && <SafetyTips />}
+
+            {!isOwner && listing.status === "active" && (
+              <Link
+                href={`/inspectors?province=${encodeURIComponent(listing.province)}`}
+                className="block bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl p-4 transition-colors"
+              >
+                <p className="text-sm font-semibold">ไม่แน่ใจสภาพรถ?</p>
+                <p className="text-xs text-zinc-300 mt-0.5">หาคนดูรถใน{listing.province} ไปตรวจก่อนซื้อ →</p>
+              </Link>
+            )}
 
             {/* Seller card */}
             {(sellerProfile || sellerScore) && (

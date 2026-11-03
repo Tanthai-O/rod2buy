@@ -28,11 +28,16 @@
 | `audit_logs` | บันทึก action สำคัญ (admin อ่านได้) |
 | `listing_private` | เลขตัวถัง + path เล่มทะเบียน (เจ้าของ + admin เท่านั้น) |
 | `listing_modifications` | รายการของแต่ง เดิม ↔ แต่ง |
+| `inspector_profiles` | โปรไฟล์คนดูรถ (1 ต่อ user) — ต้องยืนยันตัวตนก่อนสมัคร, admin อนุมัติก่อนขึ้น public |
+| `inspection_reports` | ผลงาน/รายงานตรวจรถ (เช็กลิสต์ + รูป) — ผูกกับ listing ได้ แสดงบนประกาศเมื่อเจ้าของประกาศยืนยัน |
+| `inspector_contacts` | log คนที่เปิดดูเบอร์คนดูรถ (เขียนผ่าน RPC เท่านั้น) |
+| `inspector_reviews` | รีวิวคนดูรถ — เฉพาะคนที่เคยติดต่อแล้ว |
 
 ## Supabase Views
 - `price_estimates` — ราคาเฉลี่ยต่อ brand/model/year (Price Estimator)
 - `seller_scores` — คะแนน trust ของผู้ขาย (Seller Trust Score)
 - `listing_model_counts` — จำนวนประกาศ active ต่อ brand/model (dropdown ตัวกรอง)
+- `inspector_scores` — คะแนนรีวิว + จำนวนผลงานของคนดูรถที่อนุมัติแล้ว
 
 ## Car model catalog
 - `lib/car-models.ts` — รายชื่อรุ่นต่อยี่ห้อ ฟอร์มขายเลือกจากนี้ (พิมพ์เองได้ผ่าน "อื่น ๆ") — รุ่นใหม่ออกให้เพิ่มที่ไฟล์นี้
@@ -46,11 +51,13 @@
 - `supabase/migrations/006_fix_listing_policies.sql` — ลบ policy เก่า "View listings" (สร้างใน dashboard) ที่อ่าน `profiles.role` ตรงๆ ทำให้ anon เปิด /listings ไม่ได้ — policy ที่เช็ก admin ให้ใช้ `public.is_admin()` เสมอ
 - `supabase/migrations/007_modifications.sql` — รถแต่ง: `listings.modification_level` (stock/light/moderate/heavy) + ตาราง `listing_modifications` (เดิม ↔ แต่ง, ของเดิมแถม, สถานะแจ้งขนส่ง) — Price Estimator ไม่นับรถ heavy
 - `supabase/migrations/008_model_counts.sql` — view `listing_model_counts` (จำนวนรถ active ต่อยี่ห้อ/รุ่น สำหรับ dropdown) + ปรับชื่อรุ่นเก่าให้ตรง catalog
+- `supabase/migrations/009_inspectors.sql` — คนดูรถ: `inspector_profiles`, `inspection_reports`, `inspector_contacts`, `inspector_reviews`, view `inspector_scores`, RPC `reveal_inspector_contact()` / `confirm_inspection_report()`, bucket `inspector-media`
 - `supabase/seed.sql` — รถตัวอย่าง 20 คัน (แต่งขึ้นเอง) ผูกกับ admin คนแรก, รันหลัง migration ครบ
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
 ## Storage Buckets
 - `car-images` (public) — รูปรถ path `{user_id}/{listing_id}/...`
+- `inspector-media` (public) — รูปรายงานตรวจรถ path `{user_id}/reports/...`
 - `verification-docs` (private) — บัตรประชาชน `{user_id}/id_card_*` และสมุดทะเบียน `{user_id}/reg_book/*`
 
 ## Supabase Client Files

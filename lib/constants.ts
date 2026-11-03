@@ -262,3 +262,77 @@ export const PRICE_OPTIONS = [
   { value: "2000000", label: "2,000,000" },
   { value: "3000000", label: "3,000,000" },
 ]
+
+// ── Inspectors (migration 009) ───────────────────────
+export const INSPECTOR_SPECIALTIES = [
+  { value: "eco_car", label: "อีโคคาร์ / รถเล็ก" },
+  { value: "sedan", label: "เก๋ง" },
+  { value: "pickup", label: "กระบะ / PPV" },
+  { value: "suv", label: "SUV" },
+  { value: "european", label: "รถยุโรป" },
+  { value: "luxury", label: "รถหรู" },
+  { value: "ev_hybrid", label: "ไฮบริด / EV" },
+  { value: "modified", label: "รถแต่ง / รถจูน" },
+  { value: "classic", label: "รถคลาสสิก" },
+  { value: "flood", label: "เช็กรถน้ำท่วม" },
+  { value: "accident", label: "เช็กรถชน / โครงสร้าง" },
+  { value: "engine", label: "เครื่องยนต์ / เกียร์" },
+  { value: "electrical", label: "ระบบไฟ / สแกน OBD" },
+  { value: "paint", label: "วัดความหนาสี" },
+  { value: "documents", label: "เอกสาร / เล่ม / ไฟแนนซ์" },
+] as const
+
+export const INSPECTOR_SPECIALTY_LABELS: Record<string, string> = Object.fromEntries(
+  INSPECTOR_SPECIALTIES.map((s) => [s.value, s.label])
+)
+
+export const SERVICE_MODES = [
+  { value: "on_site", label: "ไปดูรถถึงที่" },
+  { value: "at_shop", label: "นำรถเข้าอู่ / ร้าน" },
+  { value: "video_call", label: "ดูผ่านวิดีโอคอล" },
+] as const
+
+export const SERVICE_MODE_LABELS: Record<string, string> = Object.fromEntries(
+  SERVICE_MODES.map((s) => [s.value, s.label])
+)
+
+export const INSPECTION_SECTIONS = [
+  { value: "body_paint", label: "ตัวถังและสี" },
+  { value: "frame", label: "โครงสร้าง / ร่องรอยชน" },
+  { value: "flood", label: "ร่องรอยน้ำท่วม" },
+  { value: "engine", label: "เครื่องยนต์" },
+  { value: "transmission", label: "เกียร์" },
+  { value: "suspension", label: "ช่วงล่าง" },
+  { value: "brakes", label: "เบรก" },
+  { value: "electrical", label: "ระบบไฟ / สแกน OBD" },
+  { value: "ac", label: "แอร์" },
+  { value: "interior", label: "ภายใน" },
+  { value: "tires", label: "ยาง" },
+  { value: "documents", label: "เอกสาร / เลขตัวถัง" },
+  { value: "test_drive", label: "ทดลองขับ" },
+] as const
+
+export const INSPECTION_SECTION_LABELS: Record<string, string> = Object.fromEntries(
+  INSPECTION_SECTIONS.map((s) => [s.value, s.label])
+)
+
+export const CHECK_STATUSES = [
+  { value: "ok", label: "ปกติ", className: "bg-green-50 text-green-700 border-green-100" },
+  { value: "minor", label: "มีจุดเล็กน้อย", className: "bg-amber-50 text-amber-700 border-amber-100" },
+  { value: "issue", label: "พบปัญหา", className: "bg-red-50 text-red-700 border-red-100" },
+  { value: "na", label: "ไม่ได้ตรวจ", className: "bg-zinc-50 text-zinc-500 border-zinc-100" },
+] as const
+
+export const CHECK_STATUS_MAP: Record<string, (typeof CHECK_STATUSES)[number]> = Object.fromEntries(
+  CHECK_STATUSES.map((s) => [s.value, s])
+)
+
+export const INSPECTION_VERDICTS = [
+  { value: "recommend", label: "แนะนำให้ซื้อ", className: "bg-green-100 text-green-800" },
+  { value: "caution", label: "ซื้อได้ แต่มีจุดต้องรู้", className: "bg-amber-100 text-amber-800" },
+  { value: "not_recommend", label: "ไม่แนะนำ", className: "bg-red-100 text-red-700" },
+] as const
+
+export const INSPECTION_VERDICT_MAP: Record<string, (typeof INSPECTION_VERDICTS)[number]> = Object.fromEntries(
+  INSPECTION_VERDICTS.map((v) => [v.value, v])
+)

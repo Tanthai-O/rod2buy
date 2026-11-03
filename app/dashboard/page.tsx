@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
 import type { Listing } from "@/types/listing"
@@ -93,6 +94,17 @@ export default async function DashboardPage({ searchParams }: PageProps) {
           />
           <SellerScoreCard score={score} />
         </div>
+
+        <Link
+          href="/dashboard/inspector"
+          className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-zinc-100 px-5 py-4 hover:border-amber-300 transition-colors"
+        >
+          <div>
+            <p className="text-sm font-semibold text-zinc-900">รับดูรถมือสอง?</p>
+            <p className="text-xs text-zinc-500">ลงโปรไฟล์คนดูรถ โชว์ผลงาน ให้ลูกค้าหาคุณเจอ</p>
+          </div>
+          <span className="text-sm font-medium text-amber-600 shrink-0">โปรไฟล์คนดูรถ →</span>
+        </Link>
 
         <DashboardTabs
           listings={listings}
