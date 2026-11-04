@@ -28,9 +28,9 @@ export async function updateSession(request: NextRequest) {
   );
 
   // refresh session — อย่าลบบรรทัดนี้
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // getClaims verifies the JWT locally (asymmetric signing keys) instead of a round trip to Supabase Auth
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
 
   // Match whole path segments — "/sell" must not also catch "/sellers"
   const path = request.nextUrl.pathname;

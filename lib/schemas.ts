@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { RESERVED_USERNAMES, USERNAME_RE } from "./seller"
 
 const CURRENT_YEAR = new Date().getFullYear()
 
@@ -66,6 +67,22 @@ export const profileSchema = z.object({
 })
 
 export type ProfileInput = z.infer<typeof profileSchema>
+
+// Shop page settings (migration 009). Empty strings mean "clear".
+export const shopSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .refine((v) => v === "" || USERNAME_RE.test(v), "ชื่อร้านในลิงก์ใช้ได้เฉพาะ a-z 0-9 _ . ยาว 3–30 ตัว และขึ้นต้น/ลงท้ายด้วยตัวอักษรหรือตัวเลข")
+    .refine((v) => !RESERVED_USERNAMES.has(v), "ชื่อนี้ใช้ไม่ได้ กรุณาเลือกชื่ออื่น"),
+  account_type: z.enum(["private", "dealer"]),
+  bio: z.string().trim().max(500, "คำอธิบายยาวเกิน 500 ตัวอักษร"),
+  shop_address: z.string().trim().max(200, "ที่อยู่ยาวเกิน 200 ตัวอักษร"),
+  business_hours: z.string().trim().max(100, "เวลาทำการยาวเกิน 100 ตัวอักษร"),
+})
+
+export type ShopInput = z.input<typeof shopSchema>
 
 export const modificationSchema = z.object({
   category: z.enum([

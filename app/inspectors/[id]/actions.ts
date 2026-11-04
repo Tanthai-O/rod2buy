@@ -20,7 +20,7 @@ export async function submitInspectorReview(input: z.input<typeof reviewSchema>)
   if (!user) return { error: "กรุณาเข้าสู่ระบบก่อนรีวิว" }
   if (user.id === d.inspectorId) return { error: "รีวิวตัวเองไม่ได้" }
 
-  // RLS enforces this too (migration 009); checked here for a clear message
+  // RLS enforces this too (migration 011); checked here for a clear message
   const { data: contacted } = await supabase
     .from("inspector_contacts")
     .select("id")

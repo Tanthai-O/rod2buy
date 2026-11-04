@@ -1,6 +1,6 @@
 -- =====================================================
 -- rod2buy — Inspector profiles (คนดูรถ / ช่างตรวจรถมือสอง)
--- Run once in Supabase SQL Editor (after 008_model_counts.sql)
+-- Run once in Supabase SQL Editor (after 010_verification_selfie.sql)
 -- Safe to re-run.
 --
 -- inspector_profiles  = one per user, admin approves before it's public;
@@ -369,8 +369,11 @@ CREATE POLICY "reviewer_admin_delete_inspector_reviews" ON public.inspector_revi
   USING (reviewer_id = auth.uid() OR public.is_admin());
 
 -- ── 5. inspector_scores view ─────────────────────────
+-- security_invoker: everything it counts is already public under RLS (reviews,
+-- reports of approved inspectors), so it needs no definer rights — keeps the
+-- Supabase Security Advisor quiet (see 009_shop_profiles)
 DROP VIEW IF EXISTS public.inspector_scores;
-CREATE VIEW public.inspector_scores AS
+CREATE VIEW public.inspector_scores WITH (security_invoker = true) AS
 SELECT
   i.user_id,
   (SELECT round(avg(r.rating)::numeric, 2)::float8

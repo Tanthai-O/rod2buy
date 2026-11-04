@@ -1,7 +1,9 @@
 "use client"
 
 import { useState, useRef } from "react"
+import Link from "next/link"
 import { createClient } from "@/supabase/client"
+import { stripImageMetadata } from "@/lib/strip-metadata"
 
 interface Props {
   userId: string
@@ -10,15 +12,31 @@ interface Props {
   lastRejectReason: string | null
 }
 
+type Slot = "id" | "selfie"
+
+const SLOTS: Record<Slot, { title: string; hint: string; alt: string }> = {
+  id: {
+    title: "1. รูปบัตรประชาชน (ด้านหน้า)",
+    hint: "ถ่ายบัตรจริงให้เห็นรูป ชื่อ-นามสกุล และวันหมดอายุชัดเจน · ปิดเลขบัตร 13 หลักได้ เราไม่ต้องใช้",
+    alt: "บัตรประชาชน",
+  },
+  selfie: {
+    title: "2. เซลฟี่ถือบัตร",
+    hint: "ถือบัตรไว้ข้างใบหน้า ให้เห็นหน้าคุณและหน้าบัตรชัดในรูปเดียว",
+    alt: "เซลฟี่ถือบัตรประชาชน",
+  },
+}
+
 export default function VerifyForm({ userId, alreadyVerified, pendingRequest, lastRejectReason }: Props) {
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
+  const [files, setFiles] = useState<Record<Slot, File | null>>({ id: null, selfie: null })
+  const [previews, setPreviews] = useState<Record<Slot, string | null>>({ id: null, selfie: null })
+  const [consent, setConsent] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputs = { id: useRef<HTMLInputElement>(null), selfie: useRef<HTMLInputElement>(null) }
 
-  const handleFile = (f: File | null) => {
+  const handleFile = (slot: Slot, f: File | null) => {
     if (!f) return
     if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
       setError("รองรับเฉพาะ JPG, PNG, WebP")
@@ -29,39 +47,55 @@ export default function VerifyForm({ userId, alreadyVerified, pendingRequest, la
       return
     }
     setError(null)
-    setFile(f)
-    setPreview(URL.createObjectURL(f))
+    setFiles((p) => ({ ...p, [slot]: f }))
+    setPreviews((p) => ({ ...p, [slot]: URL.createObjectURL(f) }))
+  }
+
+  const clear = (slot: Slot) => {
+    setFiles((p) => ({ ...p, [slot]: null }))
+    setPreviews((p) => ({ ...p, [slot]: null }))
+    if (inputs[slot].current) inputs[slot].current.value = ""
   }
 
   const handleSubmit = async () => {
-    if (!file) {
-      setError("กรุณาเลือกรูปบัตรประชาชน")
+    if (!files.id || !files.selfie) {
+      setError("กรุณาอัปโหลดทั้งรูปบัตรและเซลฟี่ถือบัตร")
+      return
+    }
+    if (!consent) {
+      setError("กรุณายินยอมให้ใช้ข้อมูลเพื่อยืนยันตัวตนก่อนส่ง")
       return
     }
     setIsUploading(true)
     setError(null)
+    const supabase = createClient()
+    const uploaded: string[] = []
     try {
-      const supabase = createClient()
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
-      const path = `${userId}/id_card_${crypto.randomUUID()}.${ext}`
-
-      const { error: uploadErr } = await supabase.storage
-        .from("verification-docs")
-        .upload(path, file, { contentType: file.type, upsert: false })
-
-      if (uploadErr) throw new Error(uploadErr.message)
+      const paths: Record<Slot, string> = { id: "", selfie: "" }
+      for (const slot of ["id", "selfie"] as const) {
+        // Strip EXIF (GPS of the user's home, device info) — only the pixels are needed
+        const clean = await stripImageMetadata(files[slot]!)
+        const path = `${userId}/${slot === "id" ? "id_card" : "selfie"}_${crypto.randomUUID()}.jpg`
+        const { error: uploadErr } = await supabase.storage
+          .from("verification-docs")
+          .upload(path, clean, { contentType: clean.type, upsert: false })
+        if (uploadErr) throw new Error("อัปโหลดรูปไม่สำเร็จ กรุณาลองใหม่")
+        uploaded.push(path)
+        paths[slot] = path
+      }
 
       // Queue for admin review (admin sets profiles.id_verified = true on approve)
-      const { error: reqErr } = await supabase
-        .from("verification_requests")
-        .insert({ user_id: userId, doc_path: path })
-      if (reqErr) {
-        await supabase.storage.from("verification-docs").remove([path])
-        throw new Error("ส่งคำขอไม่สำเร็จ กรุณาลองใหม่")
-      }
+      const { error: reqErr } = await supabase.from("verification_requests").insert({
+        user_id: userId,
+        doc_path: paths.id,
+        selfie_path: paths.selfie,
+        consented_at: new Date().toISOString(),
+      })
+      if (reqErr) throw new Error("ส่งคำขอไม่สำเร็จ กรุณาลองใหม่")
 
       setDone(true)
     } catch (e) {
+      if (uploaded.length) await supabase.storage.from("verification-docs").remove(uploaded)
       setError(e instanceof Error ? e.message : "เกิดข้อผิดพลาด")
     } finally {
       setIsUploading(false)
@@ -105,47 +139,72 @@ export default function VerifyForm({ userId, alreadyVerified, pendingRequest, la
         </div>
       )}
 
-      {/* Instructions */}
       <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-amber-800 mb-2">วิธีการยืนยันตัวตน</h3>
-        <ol className="text-sm text-amber-700 space-y-1 list-decimal list-inside">
-          <li>ถ่ายรูปบัตรประชาชน (ด้านหน้า) ให้ชัดเจน</li>
-          <li>ตรวจสอบว่าชื่อ นามสกุล และเลขบัตรอ่านได้ชัด</li>
-          <li>อัปโหลดรูปด้านล่าง</li>
-          <li>ทีมงานจะตรวจสอบและอนุมัติภายใน 24 ชั่วโมง</li>
-        </ol>
+        <h3 className="text-sm font-semibold text-amber-800 mb-2">ต้องใช้ 2 รูป</h3>
+        <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
+          <li>รูปบัตรประชาชนด้านหน้า</li>
+          <li>เซลฟี่ถือบัตร — เพื่อยืนยันว่าคุณเป็นเจ้าของบัตรจริง</li>
+        </ul>
         <p className="text-xs text-amber-600 mt-3">
-          ข้อมูลของคุณถูกเข้ารหัสและเก็บในที่ปลอดภัย เฉพาะทีมงาน rod2buy เท่านั้นที่เข้าถึงได้
+          ทีมงานตรวจภายใน 24 ชั่วโมง และ<strong>ลบรูปทั้งสองทันทีหลังตรวจเสร็จ</strong> เราไม่บันทึกเลขบัตรประชาชน
         </p>
       </div>
 
-      {/* Upload zone */}
-      {preview ? (
-        <div className="relative rounded-2xl overflow-hidden border border-zinc-200">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={preview} alt="บัตรประชาชน" className="w-full object-contain max-h-72" />
-          <button
-            type="button"
-            onClick={() => { setFile(null); setPreview(null) }}
-            className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-sm flex items-center justify-center hover:bg-red-600"
-          >
-            ✕
-          </button>
+      {(["id", "selfie"] as const).map((slot) => (
+        <div key={slot} className="space-y-2">
+          <div>
+            <p className="text-sm font-semibold text-zinc-800">{SLOTS[slot].title}</p>
+            <p className="text-xs text-zinc-500">{SLOTS[slot].hint}</p>
+          </div>
+          {previews[slot] ? (
+            <div className="relative rounded-2xl overflow-hidden border border-zinc-200 bg-zinc-50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previews[slot]!} alt={SLOTS[slot].alt} className="w-full object-contain max-h-64" />
+              <button
+                type="button"
+                onClick={() => clear(slot)}
+                aria-label="ลบรูป"
+                className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full text-sm flex items-center justify-center hover:bg-red-600"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => inputs[slot].current?.click()}
+              className="w-full border-2 border-dashed border-zinc-200 rounded-2xl p-6 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors"
+            >
+              <p className="text-sm font-medium text-zinc-700">แตะเพื่อถ่ายรูป / เลือกรูป</p>
+              <p className="text-xs text-zinc-400 mt-1">JPG, PNG, WebP · สูงสุด 5MB</p>
+            </button>
+          )}
+          <input
+            ref={inputs[slot]}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            capture={slot === "selfie" ? "user" : "environment"}
+            className="hidden"
+            onChange={(e) => handleFile(slot, e.target.files?.[0] ?? null)}
+          />
         </div>
-      ) : (
-        <div
-          onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-zinc-200 rounded-2xl p-10 text-center cursor-pointer hover:border-amber-400 hover:bg-amber-50 transition-colors"
-        >
-          <svg className="w-10 h-10 text-zinc-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-          </svg>
-          <p className="text-sm font-medium text-zinc-700">คลิกเพื่ออัปโหลดรูปบัตรประชาชน</p>
-          <p className="text-xs text-zinc-400 mt-1">JPG, PNG, WebP · สูงสุด 5MB</p>
-        </div>
-      )}
-      <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp"
-        className="hidden" onChange={(e) => handleFile(e.target.files?.[0] ?? null)} />
+      ))}
+
+      <label className="flex gap-3 items-start bg-white border border-zinc-200 rounded-xl p-4 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-0.5 w-4 h-4 accent-amber-500 shrink-0"
+        />
+        <span className="text-xs text-zinc-600 leading-relaxed">
+          ข้าพเจ้ายินยอมให้ rod2buy ใช้รูปบัตรประชาชนและเซลฟี่ถือบัตร <strong>เพื่อยืนยันตัวตนเท่านั้น</strong>{" "}
+          ทีมงานจะลบรูปทันทีหลังตรวจ และข้าพเจ้าถอนความยินยอมได้ตามที่ระบุใน{" "}
+          <Link href="/privacy#identity" target="_blank" className="text-amber-600 underline">
+            นโยบายความเป็นส่วนตัว
+          </Link>
+        </span>
+      </label>
 
       {error && (
         <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-xl">{error}</p>
@@ -153,7 +212,7 @@ export default function VerifyForm({ userId, alreadyVerified, pendingRequest, la
 
       <button
         onClick={handleSubmit}
-        disabled={!file || isUploading}
+        disabled={!files.id || !files.selfie || !consent || isUploading}
         className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-zinc-900 font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2"
       >
         {isUploading ? (

@@ -40,6 +40,10 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Shop pages: rod2buy.com/@somchaicar → /sellers/somchaicar
+  async rewrites() {
+    return [{ source: "/@:username", destination: "/sellers/:username" }]
+  },
   async headers() {
     return [
       {

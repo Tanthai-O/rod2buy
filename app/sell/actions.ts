@@ -266,11 +266,7 @@ export async function updateListingImages(
 
   if (!user) redirect("/login?redirectTo=/sell")
 
-  // Only allow photos from this user's own storage folder
-  const ownPrefix = `/car-images/${user.id}/`
-  if (images.some((u) => !u.includes(ownPrefix)) || images.length > 10) {
-    return { error: "รูปภาพไม่ถูกต้อง" }
-  }
+  if (images.length > 10) return { error: "รูปภาพไม่ถูกต้อง" }
   if (registrationBookPath && !registrationBookPath.startsWith(`${user.id}/`)) {
     return { error: "รูปเล่มทะเบียนไม่ถูกต้อง" }
   }
@@ -292,6 +288,13 @@ export async function updateListingImages(
   const oldImages = (existing.images ?? []) as string[]
   const added = images.filter((u) => !oldImages.includes(u))
   const removed = oldImages.filter((u) => !images.includes(u))
+
+  // New photos must come from this user's own storage folder; photos already on
+  // the listing (e.g. seed images under /seed/) may stay
+  const ownPrefix = `/car-images/${user.id}/`
+  if (added.some((u) => !u.includes(ownPrefix))) {
+    return { error: "รูปภาพไม่ถูกต้อง" }
+  }
 
   const update: Record<string, unknown> = { images }
   if (existing.status === "active" && (added.length > 0 || registrationBookPath)) {

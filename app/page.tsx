@@ -3,16 +3,17 @@ import { createClient } from "@/supabase/server"
 import type { Listing } from "@/types/listing"
 import ListingCard from "./listings/_components/ListingCard"
 import { Icon } from "@/app/components/Icons"
+import { LISTING_CARD_COLUMNS } from "@/lib/constants"
 
 export default async function HomePage() {
   const supabase = await createClient()
   const { data } = await supabase
     .from("listings")
-    .select("*")
+    .select(LISTING_CARD_COLUMNS)
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(8)
-  const latest = (data ?? []) as Listing[]
+  const latest = (data ?? []) as unknown as Listing[]
 
   return (
     <main className="bg-zinc-50">

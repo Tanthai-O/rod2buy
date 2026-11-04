@@ -38,12 +38,16 @@ export async function rejectListing(listingId: string, reason: string) {
   revalidatePath("/admin/moderate")
 }
 
-export async function approveVerification(requestId: string) {
-  const { supabase } = await requireAdmin()
+// What the admin must confirm before approving (stored on the request for audit)
+const VERIFY_CHECKS = ["name_matches", "card_valid", "face_matches", "not_screenshot"] as const
+
+export async function approveVerification(requestId: string, checks: string[]) {
+  if (!VERIFY_CHECKS.every((c) => checks.includes(c))) throw new Error("กรุณาติ๊กตรวจให้ครบทุกข้อก่อนอนุมัติ")
+  const { supabase, userId } = await requireAdmin()
 
   const { data: req, error: reqErr } = await supabase
     .from("verification_requests")
-    .select("user_id, doc_path")
+    .select("user_id, doc_path, selfie_path")
     .eq("id", requestId)
     .single()
   if (reqErr) throw new Error(reqErr.message)
@@ -55,37 +59,47 @@ export async function approveVerification(requestId: string) {
 
   if (error) throw new Error(error.message)
 
-  await closeRequest(supabase, requestId, req.doc_path, { status: "approved" })
+  await closeRequest(supabase, requestId, [req.doc_path, req.selfie_path], {
+    status: "approved",
+    review_checks: [...VERIFY_CHECKS],
+    reviewed_by: userId,
+  })
   await logAudit("profile.verify_id", req.user_id)
   revalidatePath("/admin/moderate")
 }
 
 export async function rejectVerification(requestId: string, reason: string) {
   if (!reason.trim()) throw new Error("กรุณาระบุเหตุผล")
-  const { supabase } = await requireAdmin()
+  const { supabase, userId } = await requireAdmin()
 
   const { data: req, error } = await supabase
     .from("verification_requests")
-    .select("doc_path")
+    .select("doc_path, selfie_path")
     .eq("id", requestId)
     .single()
   if (error) throw new Error(error.message)
 
-  await closeRequest(supabase, requestId, req.doc_path, { status: "rejected", reason: reason.trim() })
+  // The user sees this reason on /dashboard/verify
+  await closeRequest(supabase, requestId, [req.doc_path, req.selfie_path], {
+    status: "rejected",
+    reason: reason.trim().slice(0, 300),
+    reviewed_by: userId,
+  })
   revalidatePath("/admin/moderate")
 }
 
-// PDPA data minimisation: the ID card photo is deleted once a decision is made
+// PDPA data minimisation: the ID card photo and the selfie are deleted once a decision is made
 async function closeRequest(
   supabase: Awaited<ReturnType<typeof requireAdmin>>["supabase"],
   requestId: string,
-  docPath: string | null,
-  update: { status: "approved" | "rejected"; reason?: string }
+  paths: Array<string | null>,
+  update: { status: "approved" | "rejected"; reason?: string; review_checks?: string[]; reviewed_by: string }
 ) {
-  if (docPath) await supabase.storage.from("verification-docs").remove([docPath])
+  const files = paths.filter((p): p is string => !!p)
+  if (files.length) await supabase.storage.from("verification-docs").remove(files)
   const { error } = await supabase
     .from("verification_requests")
-    .update({ ...update, doc_path: null, reviewed_at: new Date().toISOString() })
+    .update({ ...update, doc_path: null, selfie_path: null, reviewed_at: new Date().toISOString() })
     .eq("id", requestId)
   if (error) throw new Error(error.message)
 }

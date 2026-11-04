@@ -1,0 +1,136 @@
+// Seed cars — made-up listings for testing (not copied from any site).
+// The first 20 match the original seed.sql titles, so re-running the new seed
+// only adds photos to them instead of inserting duplicates.
+//
+// owner: "admin" | "seller" (test seller account) — see generate.mjs
+// color: [Thai name, hex used for the illustration]
+
+export const CARS = [
+  // ── original 20 (admin) ─────────────────────────────
+  { brand: "Toyota", model: "Camry", variant: "2.5 HEV Premium", year: 2022, price: 1199000, province: "กรุงเทพมหานคร", fuel: "hybrid", mileage: 28000, trans: "auto", color: ["สีเทาดาวเคราะห์", "#6b7280"], body: "sedan", cc: 2487, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Camry Hybrid 2.5V ปี 22 มือเดียว ออกห้าง ประวัติศูนย์ครบ เอกสารพร้อม" },
+  { brand: "Honda", model: "Civic", variant: "1.5 Turbo RS", year: 2021, price: 749000, province: "กรุงเทพมหานคร", fuel: "petrol", mileage: 42000, trans: "auto", color: ["สีขาวแพลทินัม", "#f1f1ee"], body: "sedan", cc: 1498, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Civic RS 1.5 Turbo ปี 21 แต่งสวย ช่วงล่างดี ใช้งานดูแลดี" },
+  { brand: "Isuzu", model: "D-Max", variant: "Spacecab Hi-Lander 1.9", year: 2022, price: 645000, province: "ขอนแก่น", fuel: "diesel", mileage: 55000, trans: "manual", color: ["สีขาว", "#f4f4f2"], body: "pickup", cab: "extended", cc: 1898, drive: "2wd", seats: 2, seller: "private", owner: "admin",
+    desc: "D-Max Spacecab Hi-Lander ปี 22 ดีเซล 1.9 ใช้งานในจังหวัด สภาพดี" },
+  { brand: "Toyota", model: "Fortuner", variant: "2.8 Legender 4WD", year: 2021, price: 1099000, province: "เชียงใหม่", fuel: "diesel", mileage: 38000, trans: "auto", color: ["สีดำ", "#1f2125"], body: "ppv", cc: 2755, drive: "4wd", seats: 7, seller: "dealer", owner: "admin",
+    desc: "Fortuner 2.8 Legender 4WD ปี 21 ออฟชันเต็ม ราคาต่อรองได้" },
+  { brand: "Honda", model: "HR-V", variant: "e:HEV RS", year: 2022, price: 819000, province: "ชลบุรี", fuel: "petrol", mileage: 22000, trans: "auto", color: ["สีแดงเลือดนก", "#8b1e2b"], body: "suv", cc: 1498, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "HR-V e:HEV RS ปี 22 ไม่เคยชน เช็คศูนย์ตลอด พร้อมใช้" },
+  { brand: "Toyota", model: "Yaris Ativ", variant: "1.2 Premium", year: 2023, price: 469000, province: "นนทบุรี", fuel: "petrol", mileage: 15000, trans: "auto", color: ["สีขาวมุก", "#f6f3ea"], body: "sedan", cc: 1197, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Yaris Ativ Sport ปี 23 ยังมีประกันศูนย์ วิ่งน้อย ประหยัดน้ำมัน" },
+  { brand: "Mazda", model: "CX-5", variant: "2.0 SP", year: 2021, price: 979000, province: "กรุงเทพมหานคร", fuel: "petrol", mileage: 48000, trans: "auto", color: ["สีน้ำเงิน Soul Red", "#1e3a6e"], body: "suv", cc: 1998, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "CX-5 2.0 SP ปี 21 ออฟชันเยอะ หนังแท้ หลังคาแก้ว สภาพสวย" },
+  { brand: "Ford", model: "Ranger", variant: "Double Cab Wildtrak 2.0", year: 2022, price: 679000, province: "นครราชสีมา", fuel: "diesel", mileage: 31000, trans: "auto", color: ["สีเทา", "#5b6068"], body: "pickup", cab: "double", cc: 1996, drive: "4wd", seats: 5, seller: "dealer", owner: "admin",
+    desc: "Ranger Wildtrak 2.0T ปี 22 4x4 อุปกรณ์ครบ ราคาดี" },
+  { brand: "BYD", model: "Atto 3", variant: "Extended Range", year: 2023, price: 1099000, province: "กรุงเทพมหานคร", fuel: "electric", mileage: 12000, trans: "auto", color: ["สีขาว", "#f4f4f2"], body: "suv", cc: null, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "BYD Atto 3 Extended Range ปี 23 วิ่ง 420 กม./ชาร์จ แบตเตอรี่ดี ไม่มีค่าน้ำมัน" },
+  { brand: "Toyota", model: "Alphard", variant: "2.5 SC Package", year: 2022, price: 3499000, province: "กรุงเทพมหานคร", fuel: "hybrid", mileage: 18000, trans: "auto", color: ["สีดำ", "#1f2125"], body: "van", cc: 2494, drive: "2wd", seats: 7, seller: "dealer", owner: "admin",
+    desc: "Alphard Hybrid SC ปี 22 เบาะ Executive Lounge แทบไม่ได้ใช้ ราคาต่อรอง" },
+  { brand: "Honda", model: "Jazz", variant: "1.5 RS", year: 2020, price: 469000, province: "สมุทรปราการ", fuel: "petrol", mileage: 65000, trans: "auto", color: ["สีเทา", "#7a7f87"], body: "hatchback", cc: 1497, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Jazz 1.5 V+ ปี 20 เครื่องดี ช่วงล่างแน่น พร้อมใช้ ราคาต่อรองได้" },
+  { brand: "Mitsubishi", model: "Pajero Sport", variant: "2.4 GT Premium", year: 2022, price: 1249000, province: "ภูเก็ต", fuel: "diesel", mileage: 35000, trans: "auto", color: ["สีขาวไข่มุก", "#f3efe4"], body: "ppv", cc: 2442, drive: "2wd", seats: 7, seller: "private", owner: "admin",
+    desc: "Pajero Sport GT Premium ปี 22 4WD ออฟชันเต็ม ประวัติดีมาก" },
+  { brand: "BMW", model: "320d", variant: "M Sport", year: 2021, price: 1799000, province: "กรุงเทพมหานคร", fuel: "diesel", mileage: 44000, trans: "auto", color: ["สีดำ Saphire", "#15171c"], body: "sedan", cc: 1995, drive: "2wd", seats: 5, seller: "dealer", owner: "admin",
+    desc: "BMW 320d M Sport ปี 21 ดีเซล เครื่องดี ประหยัดน้ำมัน อุปกรณ์ครบ" },
+  { brand: "Toyota", model: "Corolla Cross", variant: "1.8 HEV Premium", year: 2022, price: 869000, province: "อุดรธานี", fuel: "hybrid", mileage: 29000, trans: "auto", color: ["สีขาว", "#f4f4f2"], body: "suv", cc: 1798, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Corolla Cross Hybrid HV ปี 22 วิ่งในเมือง ประหยัดน้ำมันมาก สภาพสวย" },
+  { brand: "Honda", model: "CR-V", variant: "2.4 ES 4WD", year: 2022, price: 1349000, province: "ปทุมธานี", fuel: "petrol", mileage: 25000, trans: "auto", color: ["สีขาว", "#f4f4f2"], body: "suv", cc: 2356, drive: "awd", seats: 7, seller: "private", owner: "admin",
+    desc: "CR-V Turbo EL ปี 22 ออฟชันเต็ม 7 ที่นั่ง หนังแท้ หลังคาแก้ว" },
+  { brand: "Nissan", model: "Navara", variant: "Double Cab Calibre V", year: 2021, price: 599000, province: "สุราษฎร์ธานี", fuel: "diesel", mileage: 58000, trans: "manual", color: ["สีเทา", "#5b6068"], body: "pickup", cab: "double", cc: 2298, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Navara King Cab Calibre EL ปี 21 ดีเซล 2.5 ทำงานไร่ สภาพดี" },
+  { brand: "MG", model: "ZS EV", variant: "Long Range", year: 2023, price: 699000, province: "กรุงเทพมหานคร", fuel: "electric", mileage: 9000, trans: "auto", color: ["สีแดง", "#c0262d"], body: "suv", cc: null, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "MG ZS EV Long Range ปี 23 วิ่ง 440 กม./ชาร์จ ยังมีประกัน 3 ปี" },
+  { brand: "Toyota", model: "Hilux Revo", variant: "Smart Cab Entry 2.4", year: 2022, price: 549000, province: "เชียงราย", fuel: "diesel", mileage: 42000, trans: "manual", color: ["สีขาว", "#f4f4f2"], body: "pickup", cab: "extended", cc: 2393, drive: "2wd", seats: 2, seller: "private", owner: "admin",
+    desc: "Hilux Revo Smart Cab Entry ปี 22 ดีเซล 2.4 ใช้งานในจังหวัด สภาพดี" },
+  { brand: "Honda", model: "City", variant: "e:HEV RS", year: 2022, price: 639000, province: "กรุงเทพมหานคร", fuel: "hybrid", mileage: 19000, trans: "auto", color: ["สีเทา Urban", "#8a8f96"], body: "sedan", cc: 1498, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "City e:HEV RS ปี 22 ไฮบริด วิ่งน้อย ประวัติศูนย์ครบ พร้อมโอน" },
+  { brand: "Mazda", model: "2", variant: "1.3 SP", year: 2022, price: 489000, province: "ระยอง", fuel: "petrol", mileage: 33000, trans: "auto", color: ["สีแดง Soul Red", "#a3121f"], body: "hatchback", cc: 1298, drive: "2wd", seats: 5, seller: "private", owner: "admin",
+    desc: "Mazda2 1.3 SP ปี 22 เบนซิน สภาพสวยมาก ดูแลดี ราคาต่อรองได้" },
+
+  // ── new: test seller (รถบ้าน + เต็นท์) ─────────────────
+  { brand: "Toyota", model: "Vios", variant: "1.5 G", year: 2019, price: 389000, province: "กรุงเทพมหานคร", fuel: "petrol", mileage: 89000, trans: "auto", color: ["สีบรอนซ์เงิน", "#b8bcc2"], body: "sedan", cc: 1496, drive: "2wd", seats: 5, seller: "private", owner: "seller", owners: 2,
+    desc: "Vios 1.5 G ปี 19 ใช้ขับไปทำงาน เปลี่ยนยางใหม่ปีที่แล้ว แอร์เย็น ภายในสะอาด" },
+  { brand: "Honda", model: "Accord", variant: "2.0 e:HEV EL+", year: 2020, price: 1159000, province: "กรุงเทพมหานคร", fuel: "hybrid", mileage: 52000, trans: "auto", color: ["สีดำ Crystal", "#1b1d22"], body: "sedan", cc: 1993, drive: "2wd", seats: 5, seller: "private", owner: "seller",
+    desc: "Accord Hybrid ปี 20 ตัวท็อป เบาะไฟฟ้า HUD ประวัติศูนย์ทุกระยะ ไม่เคยชน" },
+  { brand: "Mercedes-Benz", model: "C300e", variant: "AMG Dynamic", year: 2021, price: 1890000, province: "กรุงเทพมหานคร", fuel: "hybrid", mileage: 36000, trans: "auto", color: ["สีขาว Polar", "#f5f5f3"], body: "sedan", cc: 1991, drive: "2wd", seats: 5, seller: "dealer", owner: "seller", finance: "financing",
+    desc: "C300e ปลั๊กอินไฮบริด ปี 21 Warranty ศูนย์เหลือ ไฟแนนซ์โปะต่อได้ ดาวน์น้อย" },
+  { brand: "Isuzu", model: "D-Max", variant: "Cab4 Hi-Lander 1.9 Z", year: 2020, price: 579000, province: "นครปฐม", fuel: "diesel", mileage: 74000, trans: "auto", color: ["สีน้ำเงิน", "#21407a"], body: "pickup", cab: "double", cc: 1898, drive: "2wd", seats: 5, seller: "private", owner: "seller",
+    desc: "D-Max Cab4 ตัวสูง ปี 20 ออโต้ ใช้งานครอบครัว เข้าศูนย์ตลอด มีสมุดเช็คระยะ" },
+  { brand: "Toyota", model: "Hilux Revo", variant: "Standard Cab 2.4 Entry", year: 2018, price: 389000, province: "สุพรรณบุรี", fuel: "diesel", mileage: 142000, trans: "manual", color: ["สีขาว", "#f4f4f2"], body: "pickup", cab: "single", cc: 2393, drive: "2wd", seats: 2, seller: "private", owner: "seller", owners: 2, accident: "minor",
+    desc: "Revo ตอนเดียว ปี 18 ใช้บรรทุกของ เครื่องดี เคยเฉี่ยวเล็กน้อยท้ายกระบะ ซ่อมแล้ว" },
+  { brand: "Mitsubishi", model: "Triton", variant: "Double Cab Athlete 4WD", year: 2022, price: 899000, province: "เชียงใหม่", fuel: "diesel", mileage: 41000, trans: "auto", color: ["สีส้ม", "#d9661f"], body: "pickup", cab: "double", cc: 2442, drive: "4wd", seats: 5, seller: "dealer", owner: "seller",
+    desc: "Triton Athlete 4WD ปี 22 ยกสูงจากโรงงาน ขึ้นดอยสบาย รับประกันเครื่องเกียร์ 1 ปี" },
+  { brand: "Nissan", model: "Almera", variant: "1.0 Turbo VL", year: 2021, price: 429000, province: "ปทุมธานี", fuel: "petrol", mileage: 38000, trans: "auto", color: ["สีส้มแดง", "#c4421f"], body: "sedan", cc: 999, drive: "2wd", seats: 5, seller: "private", owner: "seller",
+    desc: "Almera Turbo VL ปี 21 ตัวท็อป ประหยัดมาก ขับในเมือง ผู้หญิงใช้" },
+  { brand: "Suzuki", model: "Swift", variant: "1.2 GLX", year: 2020, price: 399000, province: "ขอนแก่น", fuel: "petrol", mileage: 61000, trans: "auto", color: ["สีเหลือง", "#e8b923"], body: "hatchback", cc: 1197, drive: "2wd", seats: 5, seller: "private", owner: "seller",
+    desc: "Swift GLX ปี 20 สีเหลืองหายาก ขับสนุก ประหยัด ยางยังเหลือเยอะ" },
+  { brand: "Mazda", model: "3", variant: "2.0 SP Sports", year: 2020, price: 699000, province: "กรุงเทพมหานคร", fuel: "petrol", mileage: 47000, trans: "auto", color: ["สีแดง Soul Red", "#a3121f"], body: "hatchback", cc: 1998, drive: "2wd", seats: 5, seller: "private", owner: "seller",
+    desc: "Mazda3 Fastback 2.0 SP ปี 20 หนังแดง เสียงดี Bose ไม่เคยชน ไม่เคยจมน้ำ" },
+  { brand: "Toyota", model: "Veloz", variant: "1.5 Premium", year: 2023, price: 789000, province: "ชลบุรี", fuel: "petrol", mileage: 14000, trans: "auto", color: ["สีเทา", "#80858c"], body: "mpv", cc: 1496, drive: "2wd", seats: 7, seller: "private", owner: "seller",
+    desc: "Veloz Premium ปี 23 รถครอบครัว 7 ที่นั่ง ยังมีประกันศูนย์ ใช้น้อย" },
+  { brand: "Mitsubishi", model: "Xpander Cross", variant: "1.5", year: 2021, price: 649000, province: "นครราชสีมา", fuel: "petrol", mileage: 56000, trans: "auto", color: ["สีน้ำตาล", "#6b4a33"], body: "mpv", cc: 1499, drive: "2wd", seats: 7, seller: "private", owner: "seller",
+    desc: "Xpander Cross ปี 21 ใต้ท้องสูง 7 ที่นั่ง เหมาะกับครอบครัว เข้าศูนย์ตลอด" },
+  { brand: "Hyundai", model: "Staria", variant: "2.2 SEL", year: 2022, price: 1490000, province: "กรุงเทพมหานคร", fuel: "diesel", mileage: 33000, trans: "auto", color: ["สีเงิน", "#b4b8bd"], body: "van", cc: 2199, drive: "2wd", seats: 11, seller: "dealer", owner: "seller",
+    desc: "Staria SEL 11 ที่นั่ง ปี 22 ใช้รับส่งพนักงาน ภายในกว้าง ประตูไฟฟ้า" },
+  { brand: "Toyota", model: "Commuter", variant: "2.8 Standard Roof", year: 2019, price: 899000, province: "สมุทรสาคร", fuel: "diesel", mileage: 168000, trans: "manual", color: ["สีขาว", "#f4f4f2"], body: "van", cc: 2755, drive: "2wd", seats: 15, seller: "dealer", owner: "seller", owners: 2,
+    desc: "Commuter หลังคาเตี้ย ปี 19 15 ที่นั่ง เครื่องแรง ทำทัวร์ได้ทันที" },
+  { brand: "Isuzu", model: "MU-X", variant: "1.9 Elegant", year: 2021, price: 999000, province: "อุบลราชธานี", fuel: "diesel", mileage: 49000, trans: "auto", color: ["สีเทาเข้ม", "#3c4047"], body: "ppv", cc: 1898, drive: "2wd", seats: 7, seller: "private", owner: "seller",
+    desc: "MU-X Elegant ปี 21 รุ่นใหม่ จอใหญ่ กล้องรอบคัน ขับทางไกลสบาย" },
+  { brand: "Ford", model: "Everest", variant: "2.0 Titanium+ 4WD", year: 2020, price: 1099000, province: "ภูเก็ต", fuel: "diesel", mileage: 68000, trans: "auto", color: ["สีน้ำตาลทอง", "#7c6a4f"], body: "ppv", cc: 1996, drive: "4wd", seats: 7, seller: "private", owner: "seller", flood: true,
+    desc: "Everest Titanium+ ปี 20 เคยลุยน้ำท่วมระดับล้อ เปลี่ยนพรมและเช็คระบบไฟแล้ว ราคาจึงต่ำกว่าตลาด" },
+  { brand: "Kia", model: "Carnival", variant: "2.2 SXL", year: 2022, price: 2290000, province: "กรุงเทพมหานคร", fuel: "diesel", mileage: 27000, trans: "auto", color: ["สีดำ", "#1f2125"], body: "mpv", cc: 2151, drive: "2wd", seats: 11, seller: "dealer", owner: "seller",
+    desc: "Carnival SXL ปี 22 ตัวท็อป ประตูสไลด์ไฟฟ้า ซันรูฟ 2 ตอน สภาพป้ายแดง" },
+  { brand: "Tesla", model: "Model 3", variant: "Long Range AWD", year: 2023, price: 1390000, province: "กรุงเทพมหานคร", fuel: "electric", mileage: 21000, trans: "auto", color: ["สีน้ำเงิน", "#1f4e9c"], body: "sedan", cc: null, drive: "awd", seats: 5, seller: "private", owner: "seller",
+    desc: "Model 3 Long Range ปี 23 Autopilot แบตเตอรี่ 97% วิ่งได้ 560 กม. ชาร์จบ้าน" },
+  { brand: "BYD", model: "Dolphin", variant: "Extended Range", year: 2024, price: 599000, province: "เชียงใหม่", fuel: "electric", mileage: 8000, trans: "auto", color: ["สีชมพู", "#e7a3b8"], body: "hatchback", cc: null, drive: "2wd", seats: 5, seller: "private", owner: "seller",
+    desc: "Dolphin ปี 24 วิ่งน้อยมาก ใช้ในเมือง ชาร์จที่คอนโด ประกันชั้น 1 เหลือ 8 เดือน" },
+  { brand: "Subaru", model: "Forester", variant: "2.0i-S EyeSight", year: 2020, price: 889000, province: "นนทบุรี", fuel: "petrol", mileage: 57000, trans: "auto", color: ["สีเขียว", "#3e5a45"], body: "suv", cc: 1995, drive: "awd", seats: 5, seller: "private", owner: "seller",
+    desc: "Forester EyeSight ปี 20 ขับเคลื่อน 4 ล้อตลอดเวลา ระบบความปลอดภัยครบ" },
+  { brand: "Honda", model: "Civic", variant: "1.8 EL", year: 2017, price: 549000, province: "นครศรีธรรมราช", fuel: "petrol", mileage: 118000, trans: "auto", color: ["สีขาว", "#f4f4f2"], body: "sedan", cc: 1799, drive: "2wd", seats: 5, seller: "private", owner: "seller", owners: 3, accident: "major",
+    desc: "Civic FC 1.8 EL ปี 17 เคยชนหน้าหนัก ซ่อมศูนย์ประกัน มีรูปก่อนซ่อมให้ดู ขายถูก" },
+  { brand: "Suzuki", model: "Jimny", variant: "1.5 4WD", year: 2022, price: 1290000, province: "เชียงราย", fuel: "petrol", mileage: 19000, trans: "manual", color: ["สีเขียวขี้ม้า", "#5c6b3a"], body: "suv", cc: 1462, drive: "4wd", seats: 4, seller: "private", owner: "seller",
+    desc: "Jimny เกียร์ธรรมดา ปี 22 หายาก ลุยได้จริง ใส่ล้อแม็ก+ยาง AT" },
+  { brand: "Mazda", model: "MX-5", variant: "2.0 RF", year: 2019, price: 1790000, province: "กรุงเทพมหานคร", fuel: "petrol", mileage: 23000, trans: "manual", color: ["สีเทา Machine", "#6d7075"], body: "coupe", cc: 1998, drive: "2wd", seats: 2, seller: "private", owner: "seller",
+    desc: "MX-5 RF หลังคาแข็งพับได้ ปี 19 ขับวันหยุด เก็บในร่ม ไม่เคยลงสนาม" },
+  { brand: "Ford", model: "Mustang", variant: "2.3 EcoBoost", year: 2018, price: 1990000, province: "กรุงเทพมหานคร", fuel: "petrol", mileage: 39000, trans: "auto", color: ["สีเหลือง", "#e6b417"], body: "coupe", cc: 2261, drive: "2wd", seats: 4, seller: "dealer", owner: "seller", owners: 2,
+    desc: "Mustang 2.3 EcoBoost ปี 18 ป้ายแดงศูนย์ไทย เบาะ Recaro ประวัติดี" },
+  { brand: "Toyota", model: "Corolla Altis", variant: "1.8 GR Sport", year: 2021, price: 789000, province: "สงขลา", fuel: "hybrid", mileage: 44000, trans: "auto", color: ["สีดำ", "#1f2125"], body: "sedan", cc: 1798, drive: "2wd", seats: 5, seller: "private", owner: "seller", finance: "paid_off",
+    desc: "Altis GR Sport ปี 21 ปิดไฟแนนซ์แล้ว เล่มอยู่ในมือ โอนได้ทันที" },
+
+  // ── pending / sold: for testing moderation and badges ─
+  { brand: "Nissan", model: "Kicks", variant: "e-Power VL", year: 2022, price: 679000, province: "กรุงเทพมหานคร", fuel: "hybrid", mileage: 26000, trans: "auto", color: ["สีขาว", "#f4f4f2"], body: "suv", cc: 1198, drive: "2wd", seats: 5, seller: "private", owner: "seller", status: "pending",
+    desc: "Kicks e-Power ปี 22 ขับเหมือนรถไฟฟ้า ไม่ต้องชาร์จ (ประกาศนี้รอแอดมินตรวจ)" },
+  { brand: "MG", model: "MG4 Electric", variant: "X", year: 2023, price: 739000, province: "ระยอง", fuel: "electric", mileage: 11000, trans: "auto", color: ["สีฟ้า", "#4f8fc9"], body: "hatchback", cc: null, drive: "2wd", seats: 5, seller: "private", owner: "seller", status: "pending",
+    desc: "MG4 Electric X ปี 23 ขับหลัง ช่วงล่างดี (ประกาศนี้รอแอดมินตรวจ)" },
+  { brand: "Honda", model: "BR-V", variant: "1.5 EL", year: 2020, price: 559000, province: "พิษณุโลก", fuel: "petrol", mileage: 63000, trans: "auto", color: ["สีเทา", "#7a7f87"], body: "mpv", cc: 1497, drive: "2wd", seats: 7, seller: "private", owner: "seller", status: "sold",
+    desc: "BR-V 7 ที่นั่ง ปี 20 (ขายแล้ว — ไว้ทดสอบป้ายขายแล้ว)" },
+]
+
+// Repair history for a few cars (Car History Card). Keys are titles.
+export const CAR_EVENTS = {
+  "Toyota Camry 2.5 HEV Premium 2022": [
+    ["2023-03-10", "ตรวจสภาพ", "เช็คระยะ 10,000 กม. ที่ศูนย์", 10000],
+    ["2024-02-18", "เปลี่ยนอะไหล่", "เปลี่ยนยาง 4 เส้น Michelin Primacy", 21000],
+  ],
+  "Toyota Vios 1.5 G 2019": [
+    ["2021-06-02", "ซ่อม", "เปลี่ยนคอมแอร์", 45000],
+    ["2023-09-15", "เปลี่ยนอะไหล่", "เปลี่ยนยาง + ผ้าเบรกหน้า", 78000],
+  ],
+  "Toyota Hilux Revo Standard Cab 2.4 Entry 2018": [
+    ["2020-11-20", "อุบัติเหตุ", "เฉี่ยวท้ายกระบะ ซ่อมสีฝาท้าย", 70000],
+    ["2024-05-01", "เปลี่ยนอะไหล่", "เปลี่ยนคลัตช์ชุดใหม่", 130000],
+  ],
+  "Honda Civic 1.8 EL 2017": [
+    ["2019-08-12", "อุบัติเหตุ", "ชนด้านหน้า ประกันซ่อมที่ศูนย์ เปลี่ยนหม้อน้ำ กันชน ไฟหน้า", 52000],
+    ["2022-01-30", "ตรวจสภาพ", "ตรวจสภาพตรอ. ผ่าน", 88000],
+  ],
+  "Ford Everest 2.0 Titanium+ 4WD 2020": [
+    ["2022-10-05", "ซ่อม", "ลุยน้ำท่วมระดับล้อ เปลี่ยนพรม ล้างระบบเบรก เช็คปลั๊กไฟ", 51000],
+  ],
+  "Tesla Model 3 Long Range AWD 2023": [
+    ["2024-07-20", "ตรวจสภาพ", "ตรวจแบตเตอรี่ที่ศูนย์ สุขภาพแบต 97%", 15000],
+  ],
+}
+
+export const titleOf = (c) => `${c.brand} ${c.model} ${c.variant} ${c.year}`

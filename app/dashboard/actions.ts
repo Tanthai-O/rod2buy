@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/supabase/server"
-import { profileSchema } from "@/lib/schemas"
+import { profileSchema, shopSchema, type ShopInput } from "@/lib/schemas"
 
 export async function updateProfile(data: {
   display_name: string
@@ -27,6 +27,66 @@ export async function updateProfile(data: {
 
   if (error) throw new Error(error.message)
   revalidatePath("/dashboard")
+}
+
+// Shop page settings (migration 009). Returns an error message instead of throwing
+// so the form can show "ชื่อนี้มีคนใช้แล้ว" next to the field.
+export async function updateShop(data: ShopInput): Promise<{ error?: string; username?: string | null }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
+
+  const parsed = shopSchema.safeParse(data)
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+  const v = parsed.data
+  const isDealer = v.account_type === "dealer"
+
+  const { data: before } = await supabase.from("profiles").select("username").eq("id", user.id).maybeSingle()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      username: v.username || null,
+      account_type: v.account_type,
+      bio: v.bio || null,
+      // PDPA: only shops show an address / opening hours (also enforced by a DB constraint)
+      shop_address: isDealer ? v.shop_address || null : null,
+      business_hours: isDealer ? v.business_hours || null : null,
+    })
+    .eq("id", user.id)
+
+  if (error) {
+    if (error.code === "23505") return { error: "ชื่อนี้มีคนใช้แล้ว กรุณาเลือกชื่ออื่น" }
+    return { error: "บันทึกไม่สำเร็จ กรุณาลองใหม่" }
+  }
+
+  revalidatePath("/dashboard")
+  revalidatePath(`/sellers/${user.id}`)
+  if (before?.username) revalidatePath(`/sellers/${before.username}`)
+  if (v.username) revalidatePath(`/sellers/${v.username}`)
+  return { username: v.username || null }
+}
+
+// Cover photo: the browser uploads to car-images/{uid}/profile/…, then saves the URL here
+export async function updateCover(coverUrl: string | null): Promise<{ error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
+
+  const ownPrefix = `/car-images/${user.id}/profile/`
+  if (coverUrl !== null && !coverUrl.includes(ownPrefix)) return { error: "รูปภาพไม่ถูกต้อง" }
+
+  const { data: before } = await supabase.from("profiles").select("cover_url").eq("id", user.id).maybeSingle()
+  const { error } = await supabase.from("profiles").update({ cover_url: coverUrl }).eq("id", user.id)
+  if (error) return { error: "บันทึกรูปปกไม่สำเร็จ" }
+
+  const oldPath = (before?.cover_url as string | null)?.split("/car-images/")[1]
+  if (oldPath && before?.cover_url !== coverUrl) {
+    await supabase.storage.from("car-images").remove([oldPath])
+  }
+
+  revalidatePath("/dashboard")
+  return {}
 }
 
 export async function markListingSold(listingId: string) {
