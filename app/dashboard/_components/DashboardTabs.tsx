@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import type { Listing } from "@/types/listing"
 import type { SavedListing } from "../page"
-import ListingManageCard from "./ListingManageCard"
+import ListingManageCard, { type WeekStats } from "./ListingManageCard"
 import SavedListingCard from "./SavedListingCard"
 
 type MainTab = "my-listings" | "saved"
@@ -14,6 +14,7 @@ interface Props {
   listings: Listing[]
   savedListings: SavedListing[]
   initialTab?: MainTab
+  statsById?: Record<string, WeekStats>
 }
 
 const STATUS_FILTER_LABELS: { value: StatusFilter; label: string }[] = [
@@ -23,7 +24,7 @@ const STATUS_FILTER_LABELS: { value: StatusFilter; label: string }[] = [
   { value: "sold", label: "ขายแล้ว" },
 ]
 
-export default function DashboardTabs({ listings, savedListings, initialTab = "my-listings" }: Props) {
+export default function DashboardTabs({ listings, savedListings, initialTab = "my-listings", statsById }: Props) {
   const [activeTab, setActiveTab] = useState<MainTab>(initialTab)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
 
@@ -134,7 +135,7 @@ export default function DashboardTabs({ listings, savedListings, initialTab = "m
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {filteredListings.map((listing) => (
-                    <ListingManageCard key={listing.id} listing={listing} />
+                    <ListingManageCard key={listing.id} listing={listing} stats={statsById?.[listing.id]} />
                   ))}
                 </div>
               )}

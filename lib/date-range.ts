@@ -33,6 +33,11 @@ export function startOfMonth(day: string): string {
   return `${day.slice(0, 7)}-01`
 }
 
+/** "2026-10-09" → "09/10/2569" (วัน/เดือน/ปี พ.ศ.) */
+export function formatThaiNumeric(day: string): string {
+  return toUtc(day).toLocaleDateString("th-TH", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" })
+}
+
 export interface StatsRange {
   from: string
   to: string
