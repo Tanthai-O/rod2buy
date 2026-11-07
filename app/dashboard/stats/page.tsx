@@ -2,13 +2,15 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { createClient } from "@/supabase/server"
+import { bangkokToday, MAX_RANGE_DAYS, rangePresets, resolveRange } from "@/lib/date-range"
 import DailyChart, { type DailyPoint } from "./_components/DailyChart"
+import DateField from "./_components/DateField"
 
 export const metadata: Metadata = {
   title: "สถิติประกาศ | rod2buy",
 }
 
-const PERIODS = [7, 30, 90] as const
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const STATUS_LABEL: Record<string, { text: string; className: string }> = {
   active: { text: "ขายอยู่", className: "text-green-700 bg-green-50" },
@@ -36,20 +38,30 @@ interface ListingRow {
 }
 
 interface PageProps {
-  searchParams: Promise<{ days?: string }>
+  searchParams: Promise<{ from?: string; to?: string; listing?: string }>
+}
+
+function statsHref(params: { from: string; to: string; listing?: string | null }) {
+  const q = new URLSearchParams({ from: params.from, to: params.to })
+  if (params.listing) q.set("listing", params.listing)
+  return `/dashboard/stats?${q}`
 }
 
 export default async function StatsPage({ searchParams }: PageProps) {
-  const { days: daysParam } = await searchParams
-  const days = PERIODS.find((p) => String(p) === daysParam) ?? 30
+  const sp = await searchParams
+  const today = bangkokToday()
+  const { from, to, adjusted } = resolveRange(sp.from, sp.to, today)
+  const presets = rangePresets(today)
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login?redirectTo=/dashboard/stats")
 
+  const listingParam = sp.listing && UUID.test(sp.listing) ? sp.listing : null
+
   const [statsRes, dailyRes, listingsRes] = await Promise.all([
-    supabase.rpc("my_listing_stats", { p_days: days }),
-    supabase.rpc("my_stats_daily", { p_days: days }),
+    supabase.rpc("my_listing_stats_range", { p_from: from, p_to: to }),
+    supabase.rpc("my_stats_daily_range", { p_from: from, p_to: to, p_listing_id: listingParam }),
     supabase
       .from("listings")
       .select("id, brand, model, year, price, status, images")
@@ -62,15 +74,23 @@ export default async function StatsPage({ searchParams }: PageProps) {
   const listingById = new Map(((listingsRes.data ?? []) as ListingRow[]).map((l) => [l.id, l]))
 
   const rows = stats
-    .map((s) => ({ ...s, listing: listingById.get(s.listing_id) }))
+    .map((s) => ({ ...s, listing: listingById.get(s.listing_id)! }))
     .filter((r) => r.listing)
     .sort((a, b) => b.contacts - a.contacts || b.views - a.views)
 
-  const totals = rows.reduce(
+  // ?listing= that isn't one of mine → ignore it (show all)
+  const selected = listingParam ? rows.find((r) => r.listing_id === listingParam) ?? null : null
+  const scope = selected ? [selected] : rows
+
+  const totals = scope.reduce(
     (t, r) => ({ views: t.views + r.views, contacts: t.contacts + r.contacts, saves: t.saves + r.saves }),
     { views: 0, contacts: 0, saves: 0 },
   )
-  const contactRate = totals.views > 0 ? (totals.contacts / totals.views) * 100 : null
+  // Contacts are logged since migration 003 but views only since 012, so early
+  // ranges can have more contacts than views — a rate over 100% would mislead.
+  const rateUnreliable = totals.contacts > totals.views
+  const contactRate = totals.views > 0 && !rateUnreliable ? (totals.contacts / totals.views) * 100 : null
+  const selectedName = selected ? `${selected.listing.brand} ${selected.listing.model} ${selected.listing.year}` : null
 
   return (
     <main className="min-h-screen bg-zinc-50">
@@ -81,31 +101,56 @@ export default async function StatsPage({ searchParams }: PageProps) {
           <span className="text-zinc-600">สถิติประกาศ</span>
         </nav>
 
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-zinc-900">สถิติประกาศ</h1>
-            <p className="text-sm text-zinc-500 mt-1">มีคนสนใจรถของคุณแค่ไหน นับจากหน้าประกาศบน rod2buy</p>
-          </div>
-          <div className="inline-flex rounded-xl bg-white border border-zinc-100 p-1 text-sm">
-            {PERIODS.map((p) => (
-              <Link
-                key={p}
-                href={`/dashboard/stats?days=${p}`}
-                scroll={false}
-                aria-current={p === days ? "page" : undefined}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  p === days ? "bg-zinc-900 text-white font-medium" : "text-zinc-500 hover:text-zinc-800"
-                }`}
-              >
-                {p} วัน
-              </Link>
-            ))}
-          </div>
+        <header>
+          <h1 className="text-2xl font-bold text-zinc-900">สถิติประกาศ</h1>
+          <p className="text-sm text-zinc-500 mt-1">มีคนสนใจรถของคุณแค่ไหน นับจากหน้าประกาศบน rod2buy</p>
         </header>
+
+        {/* Range picker: preset chips + custom from–to (plain GET form, works without JS) */}
+        <section className="bg-white rounded-2xl border border-zinc-100 p-4 space-y-3">
+          <div className="flex gap-1.5 overflow-x-auto -mx-1 px-1 pb-0.5">
+            {presets.map((p) => {
+              // Early in a month "7 วัน" and "เดือนนี้" can be the same range — mark both
+              const on = p.from === from && p.to === to
+              return (
+                <Link
+                  key={p.key}
+                  href={statsHref({ from: p.from, to: p.to, listing: selected?.listing_id })}
+                  scroll={false}
+                  aria-current={on ? "page" : undefined}
+                  className={`shrink-0 whitespace-nowrap text-sm px-3 py-1.5 rounded-full border transition-colors ${
+                    on
+                      ? "bg-zinc-900 border-zinc-900 text-white font-medium"
+                      : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
+                  }`}
+                >
+                  {p.label}
+                </Link>
+              )
+            })}
+          </div>
+          <form action="/dashboard/stats" method="get" className="flex flex-wrap items-end gap-2">
+            {selected && <input type="hidden" name="listing" value={selected.listing_id} />}
+            {/* key: reset the field when a preset changes the range */}
+            <DateField key={`from:${from}`} name="from" label="ตั้งแต่" defaultValue={from} max={today} />
+            <DateField key={`to:${to}`} name="to" label="ถึง" defaultValue={to} max={today} />
+            <button
+              type="submit"
+              className="text-sm bg-zinc-900 hover:bg-zinc-800 text-white font-medium px-4 py-1.5 rounded-lg transition-colors"
+            >
+              ดู
+            </button>
+          </form>
+          {adjusted && (
+            <p className="text-xs text-amber-700">
+              ปรับช่วงวันที่ให้แล้ว — ดูได้ไม่เกินวันนี้ และยาวสุด {MAX_RANGE_DAYS} วัน
+            </p>
+          )}
+        </section>
 
         {setupMissing ? (
           <p className="text-sm rounded-xl px-4 py-3 border bg-amber-50 border-amber-100 text-amber-800">
-            ระบบสถิติยังไม่พร้อม — ผู้ดูแลต้องรัน migration <code>012_listing_stats.sql</code> ก่อน
+            ระบบสถิติยังไม่พร้อม — ผู้ดูแลต้องรัน migration <code>013_stats_ranges.sql</code> ก่อน
           </p>
         ) : rows.length === 0 ? (
           <div className="bg-white rounded-2xl border border-zinc-100 p-8 text-center space-y-3">
@@ -120,30 +165,38 @@ export default async function StatsPage({ searchParams }: PageProps) {
           </div>
         ) : (
           <>
-            <p className="text-lg text-zinc-700">
-              {days} วันที่ผ่านมา มีคนเปิดดูรถของคุณ{" "}
-              <strong className="text-zinc-900 tabular-nums">{totals.views.toLocaleString("th-TH")}</strong> ครั้ง
-              และกดดูเบอร์ติดต่อ{" "}
-              <strong className="text-zinc-900 tabular-nums">{totals.contacts.toLocaleString("th-TH")}</strong> คน
-            </p>
+            {selected && (
+              <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-2.5">
+                <p className="text-sm text-amber-900 min-w-0 truncate">
+                  เฉพาะ <strong>{selectedName}</strong>
+                </p>
+                <Link
+                  href={statsHref({ from, to })}
+                  scroll={false}
+                  className="shrink-0 text-sm font-medium text-amber-700 hover:text-amber-900"
+                >
+                  ดูทุกคัน ×
+                </Link>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Tile label="เข้าชม" value={totals.views.toLocaleString("th-TH")} note={`${days} วัน`} />
-              <Tile label="ติดต่อ (ดูเบอร์/LINE)" value={totals.contacts.toLocaleString("th-TH")} note={`${days} วัน`} />
+              <Tile label="เข้าชม" value={totals.views.toLocaleString("th-TH")} note="ในช่วงที่เลือก" />
+              <Tile label="ติดต่อ (ดูเบอร์/LINE)" value={totals.contacts.toLocaleString("th-TH")} note="ในช่วงที่เลือก" />
               <Tile label="บันทึกไว้" value={totals.saves.toLocaleString("th-TH")} note="ตอนนี้" />
               <Tile
                 label="อัตราติดต่อ"
                 value={contactRate === null ? "–" : `${contactRate.toFixed(contactRate < 10 ? 1 : 0)}%`}
-                note="ติดต่อ ÷ เข้าชม"
+                note={rateUnreliable ? "ยอดเข้าชมยังน้อยเกินไป" : "ติดต่อ ÷ เข้าชม"}
               />
             </div>
 
-            <DailyChart data={daily} />
+            <DailyChart key={`${from}:${to}:${selected?.listing_id ?? "all"}`} data={daily} subject={selectedName} />
 
             <section className="bg-white rounded-2xl border border-zinc-100">
               <div className="px-5 pt-5 pb-3 flex items-baseline justify-between gap-3">
                 <h2 className="font-semibold text-zinc-900">รายคัน</h2>
-                <p className="text-xs text-zinc-400">{days} วัน · (ทั้งหมด)</p>
+                <p className="text-xs text-zinc-400">แตะรถเพื่อดูกราฟคันนั้น · (ยอดรวมทั้งหมด)</p>
               </div>
               <div className="grid grid-cols-[1fr_repeat(3,3.5rem)] sm:grid-cols-[1fr_repeat(3,5rem)] gap-x-2 px-5 pb-2 text-xs text-zinc-400 border-b border-zinc-50">
                 <span>รถ</span>
@@ -152,15 +205,17 @@ export default async function StatsPage({ searchParams }: PageProps) {
                 <span className="text-right">บันทึก</span>
               </div>
               <ul className="divide-y divide-zinc-50">
-                {rows.map(({ listing, ...s }) => {
-                  const l = listing!
+                {rows.map(({ listing: l, ...s }) => {
                   const status = STATUS_LABEL[l.status]
+                  const isSelected = selected?.listing_id === s.listing_id
                   return (
                     <li
                       key={s.listing_id}
-                      className="grid grid-cols-[1fr_repeat(3,3.5rem)] sm:grid-cols-[1fr_repeat(3,5rem)] gap-x-2 items-center px-5 py-3"
+                      className={`grid grid-cols-[1fr_repeat(3,3.5rem)] sm:grid-cols-[1fr_repeat(3,5rem)] gap-x-2 items-center px-5 py-3 ${
+                        isSelected ? "bg-amber-50/60" : ""
+                      }`}
                     >
-                      <Link href={`/listings/${l.id}`} className="flex items-center gap-3 min-w-0 group">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-14 h-10 rounded-lg overflow-hidden bg-zinc-100 shrink-0 hidden sm:block">
                           {l.images?.[0] && (
                             // eslint-disable-next-line @next/next/no-img-element
@@ -168,17 +223,27 @@ export default async function StatsPage({ searchParams }: PageProps) {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-zinc-900 group-hover:text-amber-600 truncate">
+                          <Link
+                            href={statsHref({ from, to, listing: isSelected ? null : s.listing_id })}
+                            scroll={false}
+                            aria-current={isSelected ? "true" : undefined}
+                            className={`text-sm font-medium truncate block hover:text-amber-600 ${
+                              isSelected ? "text-amber-700" : "text-zinc-900"
+                            }`}
+                          >
                             {l.brand} {l.model} {l.year}
-                          </p>
+                          </Link>
                           <p className="text-xs text-zinc-500 flex items-center gap-1.5">
                             {status && (
                               <span className={`px-1.5 rounded ${status.className}`}>{status.text}</span>
                             )}
                             <span className="tabular-nums">{l.price.toLocaleString("th-TH")} บาท</span>
+                            <Link href={`/listings/${l.id}`} className="text-zinc-400 hover:text-amber-600">
+                              ประกาศ ↗
+                            </Link>
                           </p>
                         </div>
-                      </Link>
+                      </div>
                       <Num value={s.views} total={s.views_total} />
                       <Num value={s.contacts} total={s.contacts_total} />
                       <Num value={s.saves} />
@@ -190,7 +255,7 @@ export default async function StatsPage({ searchParams }: PageProps) {
 
             <p className="text-xs text-zinc-400 leading-relaxed">
               เข้าชม = จำนวนเครื่องที่เปิดหน้าประกาศ (นับ 1 ครั้งต่อเครื่องต่อวัน ไม่นับตัวคุณเอง) เป็นค่าประมาณ ·
-              ติดต่อ = คนที่กดดูเบอร์หรือ LINE ของรถคันนั้น · บันทึกไว้ = จำนวนคนที่กดหัวใจอยู่ตอนนี้ —
+              ติดต่อ = คนที่กดดูเบอร์หรือ LINE จากหน้าประกาศ (นับ 1 ครั้งต่อคนต่อคัน) · บันทึกไว้ = จำนวนคนที่กดหัวใจอยู่ตอนนี้ —
               เราไม่แสดงว่าเป็นใคร
             </p>
           </>

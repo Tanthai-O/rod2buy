@@ -20,7 +20,7 @@ function dayLabel(day: string, opts: Intl.DateTimeFormatOptions) {
 }
 
 // One measure at a time (views and contacts differ ~10x in scale — never a dual axis)
-export default function DailyChart({ data }: { data: DailyPoint[] }) {
+export default function DailyChart({ data, subject }: { data: DailyPoint[]; subject?: string | null }) {
   const [metric, setMetric] = useState<Metric>("views")
   const [hover, setHover] = useState<number | null>(null)
 
@@ -30,12 +30,18 @@ export default function DailyChart({ data }: { data: DailyPoint[] }) {
   const step = 10 ** Math.floor(Math.log10(max))
   const top = Math.ceil(max / step) * step
   const active = hover !== null ? data[hover] : null
-  const labelEvery = data.length > 31 ? 14 : data.length > 7 ? 7 : 1
+  // ~5 axis labels whatever the range length; the newest day is always labeled
+  const labelEvery = data.length <= 8 ? 1 : Math.ceil(data.length / 5)
+  // Many bars → drop the gap so thin bars still have width on a phone
+  const dense = data.length > 60
 
   return (
     <section className="bg-white rounded-2xl border border-zinc-100 p-5 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-zinc-900">{METRICS[metric].label}รายวัน</h2>
+        <h2 className="font-semibold text-zinc-900 min-w-0">
+          {METRICS[metric].label}รายวัน
+          {subject && <span className="block text-xs font-normal text-zinc-500 truncate">{subject}</span>}
+        </h2>
         <div className="inline-flex rounded-lg bg-zinc-100 p-0.5 text-sm" role="tablist">
           {(Object.keys(METRICS) as Metric[]).map((m) => (
             <button
@@ -74,7 +80,7 @@ export default function DailyChart({ data }: { data: DailyPoint[] }) {
         <span className="absolute left-0 bottom-0 translate-y-1/2 text-[10px] text-zinc-400">0</span>
         <div className="absolute inset-x-0 bottom-0 left-8 border-t border-zinc-200" />
 
-        <div className="absolute inset-0 left-8 flex items-end gap-0.5">
+        <div className={`absolute inset-0 left-8 flex items-end ${dense ? "gap-px" : "gap-0.5"}`}>
           {data.map((d, i) => {
             const v = d[metric]
             const h = (v / top) * 100
@@ -90,7 +96,7 @@ export default function DailyChart({ data }: { data: DailyPoint[] }) {
                 className="flex-1 h-full flex items-end justify-center min-w-0 focus:outline-none group"
               >
                 <span
-                  className={`block w-full max-w-4 rounded-t transition-colors ${
+                  className={`block w-full max-w-4 ${dense ? "rounded-t-sm" : "rounded-t"} transition-colors ${
                     v === 0 ? "bg-zinc-100" : hover === i ? "bg-amber-700" : "bg-amber-600 group-hover:bg-amber-700"
                   }`}
                   style={{ height: v === 0 ? "2px" : `max(${h}%, 4px)` }}
