@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/supabase/client";
 import { Icon } from "./Icons";
@@ -20,7 +19,6 @@ interface Props {
 export default function NavbarUserMenu({ user }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
@@ -35,8 +33,9 @@ export default function NavbarUserMenu({ user }: Props) {
     setOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.refresh();
-    router.push("/");
+    // Full reload, not router.push + refresh: the push raced the refresh and
+    // served the cached signed-in navbar. A reload also drops any per-user client state.
+    window.location.assign("/");
   };
 
   if (!user) {

@@ -12,6 +12,7 @@ import ContactSection from "./_components/ContactSection"
 import TrustSection from "./_components/TrustSection"
 import ModificationsSection from "./_components/ModificationsSection"
 import LiveViewers from "./_components/LiveViewers"
+import ViewTracker from "./_components/ViewTracker"
 import CompareButton from "./_components/CompareButton"
 import ReportButton from "./_components/ReportButton"
 import SellerReviews, { type Review } from "./_components/SellerReviews"
@@ -236,6 +237,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         // JSON-LD for Google rich results; "<" escaped so text can't close the script tag
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      {listing.status === "active" && !isOwner && <ViewTracker listingId={listing.id} />}
       <div className="max-w-6xl mx-auto px-4 py-6">
 
         {/* Breadcrumb */}

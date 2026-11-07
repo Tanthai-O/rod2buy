@@ -98,6 +98,19 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
         {profileResult.data && <ShopSettingsCard shop={profileResult.data as ShopSettings} />}
 
+        {listings.length > 0 && (
+          <Link
+            href="/dashboard/stats"
+            className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-zinc-100 px-5 py-4 hover:border-amber-300 transition-colors"
+          >
+            <div>
+              <p className="text-sm font-semibold text-zinc-900">สถิติประกาศ</p>
+              <p className="text-xs text-zinc-500">มีคนดูรถของคุณกี่ครั้ง กดดูเบอร์กี่คน รายคัน รายวัน</p>
+            </div>
+            <span className="text-sm font-medium text-amber-600 shrink-0">ดูสถิติ →</span>
+          </Link>
+        )}
+
         <Link
           href="/dashboard/inspector"
           className="flex items-center justify-between gap-3 bg-white rounded-2xl border border-zinc-100 px-5 py-4 hover:border-amber-300 transition-colors"
