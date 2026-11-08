@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { isOwnStorageUrl } from "@/lib/storage-url"
 import { createClient } from "@/supabase/server"
 import { profileSchema, shopSchema, type ShopInput } from "@/lib/schemas"
 
@@ -73,8 +74,7 @@ export async function updateCover(coverUrl: string | null): Promise<{ error?: st
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
 
-  const ownPrefix = `/car-images/${user.id}/profile/`
-  if (coverUrl !== null && !coverUrl.includes(ownPrefix)) return { error: "รูปภาพไม่ถูกต้อง" }
+  if (coverUrl !== null && !isOwnStorageUrl(coverUrl, "car-images", user.id, "profile/")) return { error: "รูปภาพไม่ถูกต้อง" }
 
   const { data: before } = await supabase.from("profiles").select("cover_url").eq("id", user.id).maybeSingle()
   const { error } = await supabase.from("profiles").update({ cover_url: coverUrl }).eq("id", user.id)

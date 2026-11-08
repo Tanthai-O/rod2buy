@@ -46,7 +46,8 @@ export default async function Navbar() {
           </Link>
           <Link
             href="/inspectors"
-            className="whitespace-nowrap text-sm text-zinc-300 hover:text-white px-1.5 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            // Hidden on the narrowest phones (<375px) so the login button still fits
+            className="hidden min-[375px]:block whitespace-nowrap text-sm text-zinc-300 hover:text-white px-1.5 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
           >
             <span className="sm:hidden">คนดูรถ</span>
             <span className="hidden sm:inline">หาคนดูรถ</span>
