@@ -28,11 +28,17 @@
 | `audit_logs` | บันทึก action สำคัญ (admin อ่านได้) |
 | `listing_private` | เลขตัวถัง + path เล่มทะเบียน (เจ้าของ + admin เท่านั้น) |
 | `listing_modifications` | รายการของแต่ง เดิม ↔ แต่ง |
+| `inspector_profiles` | โปรไฟล์คนดูรถ (1 ต่อ user) — ต้องยืนยันตัวตนก่อนสมัคร, admin อนุมัติก่อนขึ้น public |
+| `inspection_reports` | ผลงาน/รายงานตรวจรถ (เช็กลิสต์ + รูป) — ผูกกับ listing ได้ แสดงบนประกาศเมื่อเจ้าของประกาศยืนยัน |
+| `inspector_contacts` | log คนที่เปิดดูเบอร์คนดูรถ (เขียนผ่าน RPC เท่านั้น) |
+| `inspector_reviews` | รีวิวคนดูรถ — เฉพาะคนที่เคยติดต่อแล้ว |
+| `listing_view_days` | ยอดเข้าชมต่อประกาศต่อวัน (ไม่มีข้อมูลคนดู) — เขียนผ่าน RPC `record_listing_view()` เท่านั้น |
 
 ## Supabase Views
 - `price_estimates` — ราคาเฉลี่ยต่อ brand/model/year (Price Estimator)
 - `seller_scores` — คะแนน trust ของผู้ขาย (Seller Trust Score)
 - `listing_model_counts` — จำนวนประกาศ active ต่อ brand/model (dropdown ตัวกรอง)
+- `inspector_scores` — คะแนนรีวิว + จำนวนผลงานของคนดูรถที่อนุมัติแล้ว
 
 ## Car model catalog
 - `lib/car-models.ts` — รายชื่อรุ่นต่อยี่ห้อ ฟอร์มขายเลือกจากนี้ (พิมพ์เองได้ผ่าน "อื่น ๆ") — รุ่นใหม่ออกให้เพิ่มที่ไฟล์นี้
@@ -48,11 +54,15 @@
 - `supabase/migrations/008_model_counts.sql` — view `listing_model_counts` (จำนวนรถ active ต่อยี่ห้อ/รุ่น สำหรับ dropdown) + ปรับชื่อรุ่นเก่าให้ตรง catalog
 - `supabase/migrations/009_shop_profiles.sql` — หน้าร้าน: `profiles.username` (ลิงก์ `/@ชื่อ`), `account_type` (private/dealer), `bio`, `cover_url`, `shop_address` + `business_hours` (เต็นท์เท่านั้น — constraint บังคับ), `business_verified` (admin ตั้งเท่านั้น), RPC `reveal_seller_contact()`; ย้าย view `price_estimates` / `seller_scores` ไป schema `private` (แก้ Security Advisor "Security Definer View") — view ใน public เป็น security_invoker ครอบอีกชั้น ห้ามเปลี่ยนเป็น invoker ตรง ๆ เพราะต้องนับรถที่ขายแล้วซึ่ง RLS ซ่อนจากผู้ชม
 - `supabase/migrations/010_verification_selfie.sql` — ยืนยันตัวตน = รูปบัตร + เซลฟี่ถือบัตร + เวลาที่ยินยอม (PDPA) บังคับที่ RLS, คำขอ pending ได้คนละ 1, `review_checks` / `reviewed_by` เก็บผลตรวจ; RPC `admin_user_overview()` (admin เท่านั้น) ให้หน้าตรวจเห็นอีเมล วิธีสมัคร อายุบัญชี เบอร์ จำนวนประกาศ การโดนแจ้ง และประวัติคำขอ — รูปทั้งสองลบทันทีหลังอนุมัติ/ปฏิเสธ
+- `supabase/migrations/011_inspectors.sql` — คนดูรถ: `inspector_profiles`, `inspection_reports`, `inspector_contacts`, `inspector_reviews`, view `inspector_scores`, RPC `reveal_inspector_contact()` / `confirm_inspection_report()`, bucket `inspector-media`
+- `supabase/migrations/012_listing_stats.sql` — สถิติผู้ขาย: ตาราง `listing_view_days`, RPC `record_listing_view()` (ไม่นับเจ้าของ, เฉพาะประกาศ active), `my_listing_stats(p_days)` / `my_stats_daily(p_days)` (ยอดดู/ติดต่อ/บันทึก ของประกาศตัวเอง — นับรวม ไม่บอกว่าใคร) → หน้า `/dashboard/stats`
+- `supabase/migrations/013_stats_ranges.sql` — สถิติแบบเลือกช่วงวัน: RPC `my_listing_stats_range(p_from, p_to)` / `my_stats_daily_range(p_from, p_to, p_listing_id)` (ยาวสุด 366 วัน, เลือกรถทีละคันได้) — helper วันที่อยู่ที่ `lib/date-range.ts`
 - `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ (มือถือ: รัน `supabase/seed/1.sql` → `5.sql` ทีละไฟล์แทน) — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
 ## Storage Buckets
 - `car-images` (public) — รูปรถ path `{user_id}/{listing_id}/...`
+- `inspector-media` (public) — รูปรายงานตรวจรถ path `{user_id}/reports/...`
 - `verification-docs` (private) — บัตรประชาชน `{user_id}/id_card_*` และสมุดทะเบียน `{user_id}/reg_book/*`
 
 ## หน้าร้าน + การ์ดแชร์

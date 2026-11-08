@@ -26,7 +26,7 @@ export async function updateProfile(data: {
     .eq("id", user.id)
 
   if (error) throw new Error(error.message)
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
 }
 
 // Shop page settings (migration 009). Returns an error message instead of throwing
@@ -60,7 +60,7 @@ export async function updateShop(data: ShopInput): Promise<{ error?: string; use
     return { error: "บันทึกไม่สำเร็จ กรุณาลองใหม่" }
   }
 
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
   revalidatePath(`/sellers/${user.id}`)
   if (before?.username) revalidatePath(`/sellers/${before.username}`)
   if (v.username) revalidatePath(`/sellers/${v.username}`)
@@ -85,7 +85,7 @@ export async function updateCover(coverUrl: string | null): Promise<{ error?: st
     await supabase.storage.from("car-images").remove([oldPath])
   }
 
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
   return {}
 }
 
@@ -101,7 +101,7 @@ export async function markListingSold(listingId: string) {
     .eq("user_id", user.id)
 
   if (error) throw new Error(error.message)
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
 }
 
 export async function deleteListing(listingId: string) {
@@ -151,7 +151,7 @@ export async function deleteListing(listingId: string) {
     .eq("user_id", user.id)
 
   if (error) throw new Error(error.message)
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
 }
 
 export async function unsaveListing(listingId: string) {
@@ -165,5 +165,5 @@ export async function unsaveListing(listingId: string) {
     .eq("listing_id", listingId)
     .eq("user_id", user.id)
 
-  revalidatePath("/dashboard")
+  revalidatePath("/dashboard", "layout")
 }

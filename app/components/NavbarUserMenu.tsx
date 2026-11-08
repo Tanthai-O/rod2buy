@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/supabase/client";
 import { Icon } from "./Icons";
@@ -20,7 +19,6 @@ interface Props {
 export default function NavbarUserMenu({ user }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
@@ -35,15 +33,16 @@ export default function NavbarUserMenu({ user }: Props) {
     setOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.refresh();
-    router.push("/");
+    // Full reload, not router.push + refresh: the push raced the refresh and
+    // served the cached signed-in navbar. A reload also drops any per-user client state.
+    window.location.assign("/");
   };
 
   if (!user) {
     return (
       <Link
         href="/login"
-        className="whitespace-nowrap text-sm border border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white px-3 min-[360px]:px-4 py-1.5 rounded-full transition-colors"
+        className="whitespace-nowrap text-sm border border-zinc-600 hover:border-zinc-400 text-zinc-300 hover:text-white px-3 sm:px-4 py-1.5 rounded-full transition-colors"
       >
         เข้าสู่ระบบ
       </Link>
@@ -115,6 +114,14 @@ export default function NavbarUserMenu({ user }: Props) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
               </svg>
               รายการที่บันทึก
+            </Link>
+            <Link
+              href="/dashboard/inspector"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 transition-colors"
+            >
+              <Icon name="shield" className="w-4 h-4 text-zinc-400" />
+              โปรไฟล์คนดูรถ
             </Link>
             <Link
               href="/account/security"

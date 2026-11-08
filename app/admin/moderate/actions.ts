@@ -124,3 +124,24 @@ export async function resolveReport(
   if (error) throw new Error(error.message)
   revalidatePath("/admin/moderate")
 }
+
+export async function decideInspector(
+  userId: string,
+  decision: "approved" | "rejected" | "suspended",
+  reason?: string
+) {
+  if (decision !== "approved" && !reason?.trim()) throw new Error("กรุณาระบุเหตุผล")
+  const { supabase } = await requireAdmin()
+
+  const { error } = await supabase
+    .from("inspector_profiles")
+    .update({ status: decision, rejection_reason: decision === "approved" ? null : reason!.trim() })
+    .eq("user_id", userId)
+  if (error) throw new Error(error.message)
+
+  const action = decision === "approved" ? "inspector.approve" : decision === "rejected" ? "inspector.reject" : "inspector.suspend"
+  await logAudit(action, userId, reason ? { reason } : undefined)
+  revalidatePath("/admin/moderate")
+  revalidatePath(`/inspectors/${userId}`)
+  revalidatePath("/inspectors")
+}

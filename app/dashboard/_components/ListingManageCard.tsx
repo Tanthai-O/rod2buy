@@ -17,11 +17,18 @@ const STATUS_COLOR: Record<Listing["status"], string> = {
   sold: "bg-zinc-100 text-zinc-500",
 }
 
-interface Props {
-  listing: Listing
+export interface WeekStats {
+  views: number
+  contacts: number
 }
 
-export default function ListingManageCard({ listing }: Props) {
+interface Props {
+  listing: Listing
+  /** last 7 days; omitted when stats aren't available */
+  stats?: WeekStats
+}
+
+export default function ListingManageCard({ listing, stats }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isMarkingSold, setIsMarkingSold] = useState(false)
@@ -95,6 +102,18 @@ export default function ListingManageCard({ listing }: Props) {
           <p className="text-base font-bold text-amber-500 mt-1">
             ฿{listing.price.toLocaleString()}
           </p>
+          {stats && listing.status === "active" && (
+            <Link
+              href={`/dashboard/stats?listing=${listing.id}`}
+              className="mt-1 inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-zinc-800"
+              title="7 วันที่ผ่านมา"
+            >
+              <span><span className="font-semibold text-zinc-800 tabular-nums">{stats.views}</span> เข้าชม</span>
+              <span className="text-zinc-300">·</span>
+              <span><span className="font-semibold text-zinc-800 tabular-nums">{stats.contacts}</span> ติดต่อ</span>
+              <span className="text-zinc-400">(7 วัน)</span>
+            </Link>
+          )}
         </div>
       </div>
 

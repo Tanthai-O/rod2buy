@@ -37,12 +37,19 @@ export default async function Navbar() {
           <span className="text-white">2buy</span>
         </Link>
 
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-0.5 sm:gap-2">
           <Link
             href="/listings"
-            className="hidden min-[360px]:block whitespace-nowrap text-sm text-zinc-300 hover:text-white px-2 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            className="whitespace-nowrap text-sm text-zinc-300 hover:text-white px-1.5 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
           >
             ค้นหารถ
+          </Link>
+          <Link
+            href="/inspectors"
+            className="whitespace-nowrap text-sm text-zinc-300 hover:text-white px-1.5 sm:px-3 py-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+          >
+            <span className="sm:hidden">คนดูรถ</span>
+            <span className="hidden sm:inline">หาคนดูรถ</span>
           </Link>
           <Link
             href="/swipe"
@@ -55,7 +62,7 @@ export default async function Navbar() {
           {!user && (
             <Link
               href="/sell"
-              className="whitespace-nowrap text-sm bg-amber-500 hover:bg-amber-400 text-zinc-900 font-semibold px-3 min-[360px]:px-4 py-1.5 rounded-full transition-colors"
+              className="whitespace-nowrap text-sm bg-amber-500 hover:bg-amber-400 text-zinc-900 font-semibold px-3 sm:px-4 py-1.5 rounded-full transition-colors"
             >
               ลงขาย
             </Link>

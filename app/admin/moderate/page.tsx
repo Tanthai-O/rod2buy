@@ -6,13 +6,16 @@ import type { Listing, ListingPrivate } from "@/types/listing"
 import ModerateCard from "./_components/ModerateCard"
 import VerificationCard, { type VerificationItem } from "./_components/VerificationCard"
 import ReportCard, { type ReportItem } from "./_components/ReportCard"
+import InspectorDecision from "./_components/InspectorDecision"
+import { INSPECTOR_SPECIALTY_LABELS } from "@/lib/constants"
+import type { InspectorProfile } from "@/types/inspector"
 
 export const metadata: Metadata = {
   title: "ตรวจสอบประกาศ | rod2buy Admin",
 }
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
-type Tab = "listings" | "verify" | "reports"
+type Tab = "listings" | "verify" | "reports" | "inspectors"
 
 interface SellerInfo {
   user_id: string
@@ -144,19 +147,21 @@ export default async function ModeratePage({ searchParams }: PageProps) {
   const { supabase } = await requireAdminPage("/admin/moderate")
 
   const { tab: rawTab } = await searchParams
-  const tab: Tab = rawTab === "verify" || rawTab === "reports" ? rawTab : "listings"
+  const tab: Tab = rawTab === "verify" || rawTab === "reports" || rawTab === "inspectors" ? rawTab : "listings"
 
   // Badge counts for every tab
-  const [listingCount, verifyCount, reportCount] = await Promise.all([
+  const [listingCount, verifyCount, reportCount, inspectorCount] = await Promise.all([
     supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "pending").is("rejection_reason", null),
     supabase.from("verification_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
+    supabase.from("inspector_profiles").select("user_id", { count: "exact", head: true }).eq("status", "pending"),
   ])
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "listings", label: "ประกาศรอตรวจ", count: listingCount.count ?? 0 },
     { key: "verify", label: "ยืนยันตัวตน", count: verifyCount.count ?? 0 },
     { key: "reports", label: "รายงาน", count: reportCount.count ?? 0 },
+    { key: "inspectors", label: "คนดูรถ", count: inspectorCount.count ?? 0 },
   ]
 
   return (
@@ -190,6 +195,7 @@ export default async function ModeratePage({ searchParams }: PageProps) {
         {tab === "listings" && <ListingsTab supabase={supabase} />}
         {tab === "verify" && <VerifyTab supabase={supabase} />}
         {tab === "reports" && <ReportsTab supabase={supabase} />}
+        {tab === "inspectors" && <InspectorsTab supabase={supabase} />}
       </div>
     </main>
   )
@@ -242,6 +248,61 @@ async function ReportsTab({ supabase }: { supabase: Supabase }) {
     <div className="space-y-4">
       {items.map((item) => (
         <ReportCard key={item.id} item={item} />
+      ))}
+    </div>
+  )
+}
+
+async function InspectorsTab({ supabase }: { supabase: Supabase }) {
+  const { data } = await supabase
+    .from("inspector_profiles")
+    .select("*, profiles(display_name)")
+    .eq("status", "pending")
+    .order("updated_at", { ascending: true })
+
+  const items = (data ?? []) as unknown as Array<InspectorProfile & { profiles: { display_name: string | null } | null }>
+  if (items.length === 0) return <EmptyQueue text="ไม่มีใบสมัครคนดูรถค้างอยู่" />
+
+  const { data: reportRows } = await supabase
+    .from("inspection_reports")
+    .select("inspector_id")
+    .in("inspector_id", items.map((i) => i.user_id))
+  const reportCounts = new Map<string, number>()
+  ;((reportRows ?? []) as Array<{ inspector_id: string }>).forEach((r) =>
+    reportCounts.set(r.inspector_id, (reportCounts.get(r.inspector_id) ?? 0) + 1)
+  )
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-zinc-500">
+        ผู้สมัครทุกคนยืนยันตัวตนแล้ว — ดูผลงานในหน้าโปรไฟล์ก่อนอนุมัติ
+      </p>
+      {items.map((i) => (
+        <div key={i.user_id} className="bg-white border border-zinc-100 rounded-xl p-4 space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-semibold text-zinc-900">{i.profiles?.display_name ?? "ไม่มีชื่อ"}</p>
+              <p className="text-sm text-zinc-700">{i.headline}</p>
+            </div>
+            <Link
+              href={`/inspectors/${i.user_id}`}
+              target="_blank"
+              className="shrink-0 text-xs font-medium text-amber-600 hover:text-amber-700"
+            >
+              ดูโปรไฟล์ + ผลงาน ({reportCounts.get(i.user_id) ?? 0}) →
+            </Link>
+          </div>
+          <p className="text-xs text-zinc-500">
+            ประสบการณ์ {i.years_experience} ปี · {i.provinces.join(", ")}
+          </p>
+          {i.specialties.length > 0 && (
+            <p className="text-xs text-zinc-500">
+              {i.specialties.map((s) => INSPECTOR_SPECIALTY_LABELS[s] ?? s).join(" · ")}
+            </p>
+          )}
+          {i.bio && <p className="text-sm text-zinc-600 whitespace-pre-line line-clamp-4">{i.bio}</p>}
+          <InspectorDecision userId={i.user_id} status={i.status} />
+        </div>
       ))}
     </div>
   )

@@ -16,6 +16,7 @@ export default function Footer() {
         </p>
         <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1">
           <Link href="/about" className="hover:text-zinc-700">เกี่ยวกับเรา</Link>
+          <Link href="/inspectors" className="hover:text-zinc-700">หาคนดูรถ</Link>
           <Link href="/safety" className="hover:text-zinc-700">ซื้อรถอย่างปลอดภัย</Link>
           <Link href="/terms" className="hover:text-zinc-700">ข้อตกลงการใช้งาน</Link>
           <Link href="/privacy" className="hover:text-zinc-700">นโยบายความเป็นส่วนตัว</Link>

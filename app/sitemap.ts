@@ -6,7 +6,7 @@ import { SITE_URL } from "@/lib/site"
 export const revalidate = 3600
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = ["", "/listings", "/swipe", "/sell", "/about", "/safety", "/terms", "/privacy"].map(
+  const staticPages: MetadataRoute.Sitemap = ["", "/listings", "/inspectors", "/swipe", "/sell", "/about", "/safety", "/terms", "/privacy"].map(
     (path) => ({ url: `${SITE_URL}${path}`, changeFrequency: "daily", priority: path === "" ? 1 : 0.7 })
   )
 
@@ -26,5 +26,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticPages, ...listings]
+  const { data: inspectorRows } = await supabase
+    .from("inspector_profiles")
+    .select("user_id, updated_at")
+    .eq("status", "approved")
+    .limit(5000)
+
+  const inspectors: MetadataRoute.Sitemap = (inspectorRows ?? []).map((i) => ({
+    url: `${SITE_URL}/inspectors/${i.user_id}`,
+    lastModified: i.updated_at,
+    changeFrequency: "weekly",
+    priority: 0.6,
+  }))
+
+  return [...staticPages, ...listings, ...inspectors]
 }
