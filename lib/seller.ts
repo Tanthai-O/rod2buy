@@ -6,7 +6,7 @@ export const USERNAME_RE = /^[a-z0-9][a-z0-9_.]{1,28}[a-z0-9]$/
 export const RESERVED_USERNAMES = new Set([
   "admin", "administrator", "rod2buy", "support", "help", "official", "staff", "team", "system",
   "listings", "sell", "sellers", "swipe", "compare", "dashboard", "login", "register", "about",
-  "privacy", "terms", "safety", "account", "mfa", "api", "auth", "seed",
+  "privacy", "terms", "safety", "account", "mfa", "api", "auth", "seed", "inspectors",
 ])
 
 export interface SellerProfile {
