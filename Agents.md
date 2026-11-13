@@ -57,6 +57,7 @@
 - `supabase/migrations/011_inspectors.sql` — คนดูรถ: `inspector_profiles`, `inspection_reports`, `inspector_contacts`, `inspector_reviews`, view `inspector_scores`, RPC `reveal_inspector_contact()` / `confirm_inspection_report()`, bucket `inspector-media`
 - `supabase/migrations/012_listing_stats.sql` — สถิติผู้ขาย: ตาราง `listing_view_days`, RPC `record_listing_view()` (ไม่นับเจ้าของ, เฉพาะประกาศ active), `my_listing_stats(p_days)` / `my_stats_daily(p_days)` (ยอดดู/ติดต่อ/บันทึก ของประกาศตัวเอง — นับรวม ไม่บอกว่าใคร) → หน้า `/dashboard/stats`
 - `supabase/migrations/013_stats_ranges.sql` — สถิติแบบเลือกช่วงวัน: RPC `my_listing_stats_range(p_from, p_to)` / `my_stats_daily_range(p_from, p_to, p_listing_id)` (ยาวสุด 366 วัน, เลือกรถทีละคันได้) — helper วันที่อยู่ที่ `lib/date-range.ts`
+- `supabase/migrations/014_image_url_checks.sql` — URL รูปที่ผู้ใช้บันทึกได้ต้องชี้ไป Storage ของเราในโฟลเดอร์ของตัวเองเท่านั้น (บังคับที่ DB เพราะเจ้าของแก้แถวตัวเองผ่าน REST ได้โดยไม่ผ่าน server action): trigger บน `listings.images` (car-images/{user_id}/ หรือ /seed/cars/) และ `inspection_reports.images` (inspector-media/{inspector_id}/), CHECK `profiles_cover_url_own`; helper `private.is_own_storage_url()` — SQL Editor (auth.uid() NULL) ไม่โดนตรวจ
 - `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ (มือถือ: รัน `supabase/seed/1.sql` → `5.sql` ทีละไฟล์แทน) — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
 - `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
 
@@ -111,6 +112,7 @@
 - Listing ใหม่ขึ้น status "pending" รอ approve ก่อน active
 
 ## Code Style
+- URL รูปที่รับจากผู้ใช้: ตรวจด้วย `isOwnStorageUrl()` จาก `lib/storage-url.ts` (parse host + path) ห้ามใช้ `includes()`; โค้ดฝั่ง server ที่ fetch รูป (การ์ดแชร์ `lib/og.ts`) ดึงได้เฉพาะ host Supabase ของเรา, lh3.googleusercontent.com และ /seed/cars/ เท่านั้น
 - TypeScript strict
 - Tailwind utility classes (ไม่ใช้ CSS modules)
 - Server Components เป็น default, Client Components เฉพาะที่จำเป็น

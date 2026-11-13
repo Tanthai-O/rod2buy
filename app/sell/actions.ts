@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { isOwnStorageUrl } from "@/lib/storage-url"
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/supabase/server"
 import { listingSchema, modificationSchema, type ModificationInput } from "@/lib/schemas"
@@ -291,8 +292,7 @@ export async function updateListingImages(
 
   // New photos must come from this user's own storage folder; photos already on
   // the listing (e.g. seed images under /seed/) may stay
-  const ownPrefix = `/car-images/${user.id}/`
-  if (added.some((u) => !u.includes(ownPrefix))) {
+  if (added.some((u) => !isOwnStorageUrl(u, "car-images", user.id))) {
     return { error: "รูปภาพไม่ถูกต้อง" }
   }
 

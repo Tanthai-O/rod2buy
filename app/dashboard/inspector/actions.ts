@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { isOwnStorageUrl } from "@/lib/storage-url"
 import { createClient } from "@/supabase/server"
 import {
   inspectorProfileSchema,
@@ -90,8 +91,9 @@ export async function createInspectionReport(
   if (!user) return { error: "กรุณาเข้าสู่ระบบ" }
 
   // Only photos from this inspector's own storage folder
-  const ownPrefix = `/inspector-media/${user.id}/`
-  if (images.length > 12 || images.some((u) => !u.includes(ownPrefix))) return { error: "รูปภาพไม่ถูกต้อง" }
+  if (images.length > 12 || images.some((u) => !isOwnStorageUrl(u, "inspector-media", user.id))) {
+    return { error: "รูปภาพไม่ถูกต้อง" }
+  }
 
   if (d.listing_id) {
     const { data: listing } = await supabase
