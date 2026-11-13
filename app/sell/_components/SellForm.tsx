@@ -320,7 +320,8 @@ export default function SellForm({
       setUploadStatus("กำลังบันทึกรูปภาพ…")
       const imgRes = await updateListingImages(targetId, [...existingImages, ...imageUrls], regBookUrl)
       if (imgRes.error !== undefined) throw new Error(imgRes.error)
-      if (isEdit && (imageUrls.length > 0 || regBookUrl) && status === "active") status = "pending"
+      const removedPhotos = existingImages.length !== (listing?.images?.length ?? 0)
+      if (isEdit && (imageUrls.length > 0 || removedPhotos || regBookUrl) && status === "active") status = "pending"
 
       setResultStatus(status)
       setSuccessId(targetId)

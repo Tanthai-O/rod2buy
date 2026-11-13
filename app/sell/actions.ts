@@ -184,7 +184,8 @@ export async function createListing(
   return { id: listing.id }
 }
 
-// Fields a seller can change on a live listing without going back to moderation
+// Fields a seller can change on a live listing without going back to moderation.
+// The DB enforces the same list (guard_listing_status, migration 015) — change both.
 const NO_REVIEW_FIELDS = new Set(["price"])
 
 export async function updateListing(
@@ -297,7 +298,8 @@ export async function updateListingImages(
   }
 
   const update: Record<string, unknown> = { images }
-  if (existing.status === "active" && (added.length > 0 || registrationBookPath)) {
+  // Any photo change on a live listing is re-reviewed (migration 015 enforces this in the DB)
+  if (existing.status === "active" && (added.length > 0 || removed.length > 0 || registrationBookPath)) {
     update.status = "pending"
   }
 
