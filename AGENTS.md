@@ -44,6 +44,7 @@
 - `lib/car-models.ts` — รายชื่อรุ่นต่อยี่ห้อ ฟอร์มขายเลือกจากนี้ (พิมพ์เองได้ผ่าน "อื่น ๆ") — รุ่นใหม่ออกให้เพิ่มที่ไฟล์นี้
 
 ## Migrations (รันตามลำดับใน Supabase SQL Editor)
+- `supabase/migrations/000_base.sql` — ตารางตั้งต้นก่อน 001 (`profiles`, `listings`, `car_events`, `saved_listings`, `response_logs`) + RLS เจ้าของ + bucket `car-images` — **สร้างใหม่จากโค้ด** (ของจริงสร้างใน dashboard) ใช้กับ DB ใหม่เท่านั้น ห้ามรันบน production; `listings.images` เป็น `jsonb`
 - `supabase/migrations/001_trust.sql` — verification fields, audit_logs, bucket `verification-docs`
 - `supabase/migrations/002_features.sql` — กัน user ตั้งตัวเองเป็น admin / approve ประกาศเอง, reviews, reports, verification_requests, price_at_save, นิยาม views ใหม่
 - `supabase/migrations/003_contact_mfa.sql` — เบอร์/LINE อ่านผ่าน RPC `reveal_contact()` เท่านั้น (log + จำกัด 20 ผู้ขาย/วัน), รีวิวได้เฉพาะคนที่ติดต่อแล้ว, admin ต้องใช้ 2FA (aal2)
@@ -59,7 +60,7 @@
 - `supabase/migrations/013_stats_ranges.sql` — สถิติแบบเลือกช่วงวัน: RPC `my_listing_stats_range(p_from, p_to)` / `my_stats_daily_range(p_from, p_to, p_listing_id)` (ยาวสุด 366 วัน, เลือกรถทีละคันได้) — helper วันที่อยู่ที่ `lib/date-range.ts`
 - `supabase/migrations/014_image_url_checks.sql` — URL รูปที่ผู้ใช้บันทึกได้ต้องชี้ไป Storage ของเราในโฟลเดอร์ของตัวเองเท่านั้น (บังคับที่ DB เพราะเจ้าของแก้แถวตัวเองผ่าน REST ได้โดยไม่ผ่าน server action): trigger บน `listings.images` (car-images/{user_id}/ หรือ /seed/cars/) และ `inspection_reports.images` (inspector-media/{inspector_id}/), CHECK `profiles_cover_url_own`; helper `private.is_own_storage_url()` — SQL Editor (auth.uid() NULL) ไม่โดนตรวจ
 - `supabase/seed.sql` — รถตัวอย่าง 47 คัน (แต่งขึ้นเอง) + บัญชีทดสอบ 2 คน (`seller@rod2buy.test`, `buyer@rod2buy.test`) + ประวัติรถ, รันหลัง migration ครบ, รันซ้ำได้ (มือถือ: รัน `supabase/seed/1.sql` → `5.sql` ทีละไฟล์แทน) — **ไฟล์นี้ generate จาก `scripts/seed/` (แก้ข้อมูลที่ `cars.mjs` แล้วรัน `node scripts/seed/generate.mjs`)** รูปเป็นภาพวาดอยู่ที่ `public/seed/cars/`
-- `supabase/schema.sql` ยังไม่มี base schema (ไฟล์เสีย) — ถ้าต้องสร้าง DB ใหม่ต้อง export schema จาก Supabase มาใส่
+- ทดสอบ migrations: `bash scripts/db-check/run.sh` (ต้องมี docker + psql) — รัน 000 → 014 บน `supabase/postgres` เปล่า, รันซ้ำ, รัน seed, แล้ว smoke test RLS (`scripts/db-check/smoke.sql`) — แก้ migration แล้วรันทุกครั้ง; `scripts/db-check/compare-production.sql` ใช้เทียบคอลัมน์ production กับ 000
 
 ## Storage Buckets
 - `car-images` (public) — รูปรถ path `{user_id}/{listing_id}/...`
