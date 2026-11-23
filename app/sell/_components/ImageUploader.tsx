@@ -15,15 +15,7 @@ export default function ImageUploader({ files, onChange, maxCount = 10 }: Props)
   const MAX_COUNT = Math.max(0, maxCount)
   const [dragging, setDragging] = useState(false)
   const [fileErrors, setFileErrors] = useState<string[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
-
-  // สร้าง + cleanup blob URLs
-  useEffect(() => {
-    const urls = files.map((f) => URL.createObjectURL(f))
-    setPreviews(urls)
-    return () => urls.forEach(URL.revokeObjectURL)
-  }, [files])
 
   const addFiles = (incoming: FileList | null) => {
     if (!incoming) return
@@ -119,16 +111,11 @@ export default function ImageUploader({ files, onChange, maxCount = 10 }: Props)
       )}
 
       {/* Preview grid */}
-      {previews.length > 0 && (
+      {files.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-          {previews.map((src, i) => (
+          {files.map((file, i) => (
             <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-zinc-100 group">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt={`รูปที่ ${i + 1}`}
-                className="w-full h-full object-cover"
-              />
+              <FilePreview file={file} alt={`รูปที่ ${i + 1}`} />
 
               {/* Remove button */}
               <button
@@ -171,4 +158,19 @@ export default function ImageUploader({ files, onChange, maxCount = 10 }: Props)
       )}
     </div>
   )
+}
+
+// สร้าง blob URL ใน effect แล้วตั้ง src ที่ DOM ตรง ๆ (ไม่ผ่าน state) — cleanup revoke ทุกครั้ง
+// จึงปลอดภัยกับ Strict Mode ที่ mount → cleanup → mount ซ้ำ
+function FilePreview({ file, alt }: { file: File; alt: string }) {
+  const ref = useRef<HTMLImageElement>(null)
+
+  useEffect(() => {
+    const url = URL.createObjectURL(file)
+    if (ref.current) ref.current.src = url
+    return () => URL.revokeObjectURL(url)
+  }, [file])
+
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img ref={ref} alt={alt} className="w-full h-full object-cover" />
 }
